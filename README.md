@@ -10,7 +10,7 @@
 
 ## O problema
 
-No CCO, cada ocorrência (quebra de coletivo, acidente, interdição de via) precisa virar um alerta escrito na hora, sob pressão. Feito à mão, o texto mudava de operador para operador, campos importantes ficavam de fora e a mesma informação tinha de ser reescrita para o sistema, o e-mail e o WhatsApp.
+No CCO, cada ocorrência (quebra de coletivo, acidente, interdição de via) precisa virar um alerta escrito na hora. Feito à mão, o texto mudava de operador para operador, campos importantes ficavam de fora e a mesma informação tinha de ser reescrita para o sistema, o e-mail e o WhatsApp.
 
 ## A solução
 
