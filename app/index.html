@@ -1,0 +1,1326 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gerador de alertas – CCO Área 4</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EDF0F3; --surface:#FFFFFF; --ink:#17202A; --muted:#5A6573; --line:#D2D9E1; --field:#F7F9FB;
+  --msgs:#0F7F8C; --enc:#2F8A3B; --atende:#7A3FB8; --sos:#D99A06; --acid:#C8322A; --interf:#1F5FBF; --on-accent:#FFFFFF;
+  --accent:var(--sos);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#10151B; --surface:#18202A; --ink:#E5EAEF; --muted:#98A4B1; --line:#2C3743; --field:#111820;
+    --msgs:#3BB8C6; --enc:#5DC26A; --atende:#A77BE0; --sos:#F0B429; --acid:#E5574E; --interf:#4A8BE8; --on-accent:#0E1318;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#10151B; --surface:#18202A; --ink:#E5EAEF; --muted:#98A4B1; --line:#2C3743; --field:#111820;
+  --msgs:#3BB8C6; --enc:#5DC26A; --atende:#A77BE0; --sos:#F0B429; --acid:#E5574E; --interf:#4A8BE8; --on-accent:#0E1318;
+  color-scheme:dark;
+}
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);}
+html{scroll-padding-top:env(safe-area-inset-top,0px);}
+*,*::before,*::after{box-sizing:inherit;}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Barlow",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:16px;line-height:1.45;}
+body[data-cat="sos"]{--accent:var(--sos);}
+body[data-cat="acid"]{--accent:var(--acid);}
+body[data-cat="interf"]{--accent:var(--interf);}
+body[data-cat="atende"]{--accent:var(--atende);}
+body[data-cat="msgs"]{--accent:var(--msgs);}
+body[data-cat="enc"]{--accent:var(--enc);}
+body[data-cat="msgs"] .grid{grid-template-columns:1fr;}
+body[data-cat="msgs"] .panel.out,body[data-cat="msgs"] #main_actions,body[data-cat="msgs"] #main_hint{display:none;}
+a.btn{text-decoration:none;display:inline-block;}
+.msgcard{border:1px solid var(--line);border-radius:6px;padding:10px;margin-bottom:10px;background:var(--field);}
+.msgcard input{font-weight:600;margin-bottom:6px;background:var(--surface);}
+.msgcard textarea{background:var(--surface);}
+.sched{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 10px;}
+.sched span{border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:.85rem;}
+.sched .done{opacity:.5;text-decoration:line-through;}
+.sched .next{border-color:var(--accent);color:var(--accent);font-weight:600;}
+.drop{border:2px dashed var(--line);border-radius:6px;padding:18px;text-align:center;color:var(--muted);cursor:pointer;background:var(--field);}
+.drop:hover{border-color:var(--accent);}
+#enc_img{max-width:100%;border:1px solid var(--line);border-radius:4px;margin-top:8px;display:block;}
+.lembrete{position:fixed;top:calc(env(safe-area-inset-top,0px) + 12px);left:50%;transform:translateX(-50%);width:min(560px,calc(100% - 24px));
+  background:var(--surface);color:var(--ink);border:2px solid var(--msgs);border-radius:8px;padding:14px 16px;box-shadow:0 8px 30px rgba(0,0,0,.3);z-index:50;}
+.preview.texto{white-space:pre-wrap;font-family:"Segoe UI",Arial,sans-serif;font-size:14px;}
+
+.wrap{max-width:1180px;margin:0 auto;padding:18px 20px 40px;}
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;display:flex;align-items:center;gap:12px;padding:10px 16px;
+  background:var(--surface);border-bottom:4px solid var(--accent);box-shadow:0 2px 12px rgba(0,0,0,.08);}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:31;background:var(--surface);}
+.ham{appearance:none;border:1px solid var(--line);background:var(--field);border-radius:6px;width:44px;height:44px;flex:none;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;cursor:pointer;}
+.ham span{display:block;width:20px;height:2px;background:var(--ink);border-radius:2px;transition:transform .2s,opacity .2s;}
+.ham[aria-expanded="true"] span:nth-child(1){transform:translateY(7px) rotate(45deg);}
+.ham[aria-expanded="true"] span:nth-child(2){opacity:0;}
+.ham[aria-expanded="true"] span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
+.bar-title{flex:1;min-width:0;}
+.bar-name{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:700;font-size:1.5rem;line-height:1.05;color:var(--accent);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bar-sub{font-size:.82rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+body[data-cat="msgs"] .bar-gen{display:none;}
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:35;}
+.drawer{position:fixed;top:0;bottom:0;left:0;width:min(330px,86vw);z-index:40;background:var(--surface);border-right:1px solid var(--line);
+  padding:calc(env(safe-area-inset-top,0px) + 14px) 14px calc(env(safe-area-inset-bottom,0px) + 14px);overflow-y:auto;
+  display:flex;flex-direction:column;gap:16px;transform:translateX(-102%);visibility:hidden;transition:transform .22s ease,visibility 0s linear .22s;}
+.drawer.open{transform:none;visibility:visible;transition:transform .22s ease;}
+.drawer-head{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.drawer-head h1{font-size:1.6rem;}
+.drawer .tabs{grid-template-columns:1fr;margin:0;}
+.drawer .hdrcfg{min-width:0;}
+header.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:18px;}
+h1{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:700;font-size:2rem;line-height:1;margin:0;letter-spacing:.01em;}
+.sub{color:var(--muted);font-size:.95rem;margin-top:4px;}
+.hdrcfg{display:flex;flex-direction:column;gap:4px;min-width:240px;}
+.hdrcfg label{font-size:.85rem;color:var(--muted);}
+
+/* Abas em faixas, como as cores de linha */
+.tabs{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:18px;}
+@media (max-width:1100px){.tabs{grid-template-columns:repeat(3,1fr);}}
+.tab{appearance:none;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;
+  font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:700;font-size:1.2rem;text-align:left;
+  padding:14px 16px 14px 22px;border-radius:6px;position:relative;overflow:hidden;}
+.tab::before{content:"";position:absolute;left:0;top:0;bottom:0;width:8px;background:var(--c);}
+.tab small{display:block;font-family:"Barlow",sans-serif;font-weight:500;font-size:.85rem;color:var(--muted);}
+.tab[data-cat="sos"]{--c:var(--sos);} .tab[data-cat="acid"]{--c:var(--acid);} .tab[data-cat="interf"]{--c:var(--interf);} .tab[data-cat="atende"]{--c:var(--atende);} .tab[data-cat="msgs"]{--c:var(--msgs);} .tab[data-cat="enc"]{--c:var(--enc);}
+.tab[aria-selected="true"]{background:var(--c);color:var(--on-accent);border-color:var(--c);}
+.tab[aria-selected="true"] small{color:var(--on-accent);opacity:.85;}
+.tab:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--accent);outline-offset:2px;}
+
+.grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:18px;align-items:start;}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:18px;}
+.panel.out{position:sticky;top:calc(env(safe-area-inset-top,0px) + 84px);border-top:4px solid var(--accent);}
+form[hidden]{display:none;}
+[hidden]{display:none !important;}
+.multi{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:0 12px;border:1px solid var(--line);border-radius:4px;background:var(--field);padding:6px 10px;}
+.multi .check{margin:5px 0;font-weight:400;}
+.org{border:1px solid var(--line);border-radius:6px;padding:10px 10px 4px;margin-bottom:10px;}
+.org .o-del{font-size:.85rem;padding:6px 12px;margin-bottom:8px;}
+input.invalid{border-color:var(--acid);box-shadow:0 0 0 1px var(--acid);}
+.dd summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;
+  background:var(--field);border:1px solid var(--line);border-radius:4px;padding:9px 12px;}
+.dd summary::-webkit-details-marker{display:none;}
+.dd summary::after{content:"\2630";font-size:1.15rem;line-height:1;color:var(--accent);flex:none;}
+.dd[open] summary::after{content:"\2715";font-size:1rem;}
+.dd[open] summary{border-radius:4px 4px 0 0;border-color:var(--accent);}
+#sos_dd_txt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+#sos_dd_txt.vazio{color:var(--muted);}
+.dd .multi{border-top:0;border-radius:0 0 4px 4px;border-color:var(--accent);max-height:280px;overflow-y:auto;}
+
+.fld{display:flex;flex-direction:column;gap:4px;margin-bottom:12px;}
+.fld>label,.lbl{font-weight:600;font-size:.92rem;}
+.opt{font-weight:400;color:var(--muted);font-size:.82rem;margin-left:4px;}
+.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:0 12px;}
+input,select,textarea{font:inherit;color:var(--ink);background:var(--field);border:1px solid var(--line);border-radius:4px;padding:9px 10px;width:100%;}
+textarea{min-height:84px;resize:vertical;}
+.outro{margin-top:6px;}
+.check{display:flex;align-items:center;gap:8px;font-weight:500;margin:4px 0 12px;cursor:pointer;}
+.check input{width:18px;height:18px;accent-color:var(--accent);}
+fieldset{border:1px dashed var(--line);border-radius:6px;padding:12px 12px 2px;margin:0 0 12px;}
+legend{font-weight:600;font-size:.92rem;padding:0 6px;}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
+.chip{appearance:none;border:1px solid var(--line);background:transparent;color:var(--muted);font:inherit;font-size:.82rem;
+  padding:4px 10px;border-radius:999px;cursor:pointer;}
+.chip:hover{color:var(--ink);border-color:var(--accent);}
+.sep{height:1px;background:var(--line);margin:6px 0 14px;}
+
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;}
+.btn{appearance:none;font:inherit;font-weight:600;border-radius:4px;padding:10px 16px;cursor:pointer;border:1px solid var(--line);background:var(--field);color:var(--ink);}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent);}
+.hint{color:var(--muted);font-size:.82rem;margin-top:8px;}
+
+.out h2{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-size:1.3rem;margin:0 0 10px;}
+.preview{background:#FFFFFF;color:#111;border:1px solid var(--line);border-radius:4px;padding:12px 14px;min-height:120px;
+  font-family:"Times New Roman",Times,serif;font-size:15px;line-height:1.45;overflow-x:auto;}
+.preview .empty{color:#777;font-family:"Barlow",sans-serif;}
+#code{font-family:Consolas,"Courier New",monospace;font-size:.8rem;min-height:170px;margin-top:12px;}
+.warn{margin-top:10px;padding:8px 10px;border-left:4px solid var(--acid);background:var(--field);font-size:.88rem;}
+.warn[hidden]{display:none;}
+.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 20px);transform:translateX(-50%);
+  background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .2s;}
+.toast.show{opacity:1;}
+@media (max-width:820px){
+  .grid{grid-template-columns:1fr;}
+  .tabs{grid-template-columns:repeat(2,1fr);}
+  .panel.out{position:static;}
+  .tab{font-size:1.1rem;padding:12px 10px 12px 18px;}
+  .tab small{display:none;}
+}
+@media (prefers-reduced-motion:reduce){.toast,.drawer,.ham span{transition:none;}}
+</style>
+</head>
+<body data-cat="sos">
+<div class="bar" id="bar">
+  <button type="button" class="ham" id="menu_btn" aria-label="Abrir menu de seções" aria-expanded="false" aria-controls="drawer"><span></span><span></span><span></span></button>
+  <div class="bar-title">
+    <div class="bar-name" id="bar_name">S.O.S</div>
+    <div class="bar-sub"><span id="bar_sub">Defeito no coletivo</span> · Gerador de alertas</div>
+  </div>
+  <button type="button" class="btn primary bar-gen" id="bar_gen">Gerar e copiar</button>
+</div>
+<div class="scrim" id="scrim" hidden></div>
+<nav class="drawer" id="drawer" aria-label="Seções" aria-hidden="true">
+  <div class="drawer-head">
+    <h1>Gerador de alertas</h1>
+    <button type="button" class="btn" id="menu_close" aria-label="Fechar menu">✕</button>
+  </div>
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" data-cat="sos" aria-selected="true">S.O.S<small>Defeito no coletivo</small></button>
+    <button class="tab" role="tab" data-cat="acid" aria-selected="false">Acidente<small>Com ou sem vítima, ou na via</small></button>
+    <button class="tab" role="tab" data-cat="interf" aria-selected="false">Interferência na via<small>Interdição e desvios</small></button>
+    <button class="tab" role="tab" data-cat="atende" aria-selected="false">Atende<small>E-mails das vans</small></button>
+    <button class="tab" role="tab" data-cat="msgs" aria-selected="false">Mensagens<small>Lembretes aos fiscais</small></button>
+    <button class="tab" role="tab" data-cat="enc" aria-selected="false">Encaminhamentos<small>Resumo para o WhatsApp</small></button>
+  </div>
+  <div class="hdrcfg">
+    <label for="cfg_header">Cabeçalho dos alertas</label>
+    <input id="cfg_header" value="EMPRESA – ÁREA 4 – CCO">
+  </div>
+  <div class="hint" id="drawer_hint">Atalhos: Ctrl+Enter gera e copia · Alt+1 a Alt+6 trocam de seção · Esc fecha o menu.</div>
+</nav>
+
+<div class="wrap">
+  <div class="grid">
+    <div class="panel">
+      <!-- ============ S.O.S ============ -->
+      <form id="f_sos" autocomplete="off" onsubmit="return false">
+        <label class="check"><input type="checkbox" id="sos_retif"> Retificação de um alerta anterior</label>
+        <div class="row">
+          <div class="fld"><label for="sos_coletivo">Prefixo do coletivo</label><input id="sos_coletivo" inputmode="numeric" placeholder="Ex.: 45590"></div>
+          <div class="fld"><label for="sos_linha">Linha <span class="opt">opcional</span></label><input id="sos_linha" placeholder="Ex.: 2720-10"></div>
+        </div>
+        <div class="fld"><label for="sos_local">Local <span class="opt">opcional, quando aguarda no local</span></label><input id="sos_local" placeholder="Ex.: Praça Monsenhor Ciro Turino"></div>
+        <div class="fld"><span class="lbl">Defeito <span class="opt">pode marcar mais de um</span></span>
+          <details class="dd" id="sos_dd">
+            <summary><span id="sos_dd_txt" class="vazio">Selecione os defeitos</span></summary>
+          <div class="multi" id="sos_defeitos">
+            <label class="check"><input type="checkbox" value="Vazamento de ar"> Vazamento de ar</label>
+            <label class="check"><input type="checkbox" value="Vazamento de óleo"> Vazamento de óleo</label>
+            <label class="check"><input type="checkbox" value="Pneu furado"> Pneu furado</label>
+            <label class="check"><input type="checkbox" value="Espigão corrido"> Espigão corrido</label>
+            <label class="check"><input type="checkbox" value="Sem partida"> Sem partida</label>
+            <label class="check"><input type="checkbox" value="Falha na transmissão"> Falha na transmissão</label>
+            <label class="check"><input type="checkbox" value="Power pack"> Power pack</label>
+            <label class="check"><input type="checkbox" value="Pane elétrica"> Pane elétrica</label>
+            <label class="check"><input type="checkbox" value="Coletivo sem força"> Coletivo sem força</label>
+            <label class="check"><input type="checkbox" value="Mola quebrada"> Mola quebrada</label>
+            <label class="check"><input type="checkbox" value="Amortecedor dianteiro quebrado"> Amortecedor dianteiro quebrado</label>
+            <label class="check"><input type="checkbox" value="Banco do motorista quebrado"> Banco do motorista quebrado</label>
+            <label class="check"><input type="checkbox" value="Ar-condicionado inoperante"> Ar-condicionado inoperante</label>
+          </div>
+          </details>
+          <input id="sos_defeito_outro" style="margin-top:6px" placeholder="Outro defeito (opcional)">
+        </div>
+        <div class="fld"><label for="sos_situacao">Situação</label>
+          <select id="sos_situacao" data-outro>
+            <option>Aguardando S.O.S no local.</option>
+            <option>Recolhendo a pedido do S.O.S.</option>
+            <option>Recolhendo para realizar manutenção e reparos no coletivo.</option>
+            <option value="__outro">Outra…</option>
+          </select>
+          <input id="sos_situacao_outro" class="outro" hidden placeholder="Descreva a situação">
+        </div>
+        <label class="check"><input type="checkbox" id="sos_op"> Operacional encaminhado ao local</label>
+        <div class="fld" id="sos_op_box" hidden><label for="sos_op_nome">Nome do operacional <span class="opt">opcional</span></label><input id="sos_op_nome" placeholder="Ex.: Nome do operacional"></div>
+        <div class="fld"><label for="sos_desfecho">Desfecho</label>
+          <select id="sos_desfecho" data-outro>
+            <option value="">Em andamento (sem desfecho ainda)</option>
+            <option>O coletivo recebeu os primeiros reparos no local e está recolhendo no guincho para as dependências da empresa, onde passará pelos devidos reparos e manutenções.</option>
+            <option>O coletivo já se encontra nas dependências da empresa para os devidos reparos e manutenções.</option>
+            <option>O coletivo recolheu, realizou os reparos e retornou à operação para cumprir o restante da jornada.</option>
+            <option>O S.O.S foi até o local, realizou os reparos e o coletivo retornou à operação para cumprir o restante da jornada.</option>
+            <option value="__outro">Outro…</option>
+          </select>
+          <input id="sos_desfecho_outro" class="outro" hidden placeholder="Descreva o desfecho">
+        </div>
+      </form>
+
+      <!-- ============ ACIDENTE ============ -->
+      <form id="f_acid" autocomplete="off" onsubmit="return false" hidden>
+        <div class="fld"><label for="ac_tipo">Tipo de ocorrência</label>
+          <select id="ac_tipo">
+            <option value="colisao_sem">Colisão sem vítimas</option>
+            <option value="colisao_com">Colisão com vítimas</option>
+            <option value="queda">Queda de usuário</option>
+            <option value="mal">Mal súbito</option>
+            <option value="via">Acidente na via (entre terceiros)</option>
+          </select>
+        </div>
+        <div class="row">
+          <div class="fld" data-for="colisao_sem colisao_com queda mal"><label for="ac_coletivo">Prefixo do coletivo</label><input id="ac_coletivo" inputmode="numeric" placeholder="Ex.: 45590"></div>
+          <div class="fld"><label for="ac_linha">Linha <span class="opt">opcional</span></label><input id="ac_linha" placeholder="Ex.: 2728-10"></div>
+        </div>
+        <div class="row">
+          <div class="fld"><label for="ac_data">Data</label><input type="date" id="ac_data"></div>
+          <div class="fld"><label for="ac_hora">Hora</label><input type="time" id="ac_hora"></div>
+        </div>
+        <div class="fld"><label for="ac_local">Local</label><input id="ac_local" placeholder="Ex.: Rua Embaixador Dias Carneiro, nº 80"></div>
+        <div class="fld" data-for="via"><label for="ac_pref">Prefixo que acionou o alerta <span class="opt">opcional</span></label><input id="ac_pref" inputmode="numeric" placeholder="Ex.: 45337"></div>
+
+        <fieldset data-for="colisao_sem colisao_com queda mal">
+          <legend>Condutor</legend>
+          <div class="fld"><label for="ac_cond_nome">Nome</label><input id="ac_cond_nome"></div>
+          <div class="row">
+            <div class="fld"><label for="ac_cond_re">RE <span class="opt">opcional</span></label><input id="ac_cond_re"></div>
+            <div class="fld"><label for="ac_cond_cpf">CPF</label><input id="ac_cond_cpf" inputmode="numeric" data-mask="cpf" placeholder="Só os números"></div>
+          </div>
+        </fieldset>
+
+        <fieldset data-for="colisao_sem colisao_com">
+          <legend>Veículo do terceiro</legend>
+          <div class="row">
+            <div class="fld"><label for="ac_veic">Modelo</label><input id="ac_veic" placeholder="Ex.: Renault Logan"></div>
+            <div class="fld"><label for="ac_placa">Placa</label><input id="ac_placa" data-mask="placa" placeholder="Ex.: ABC1D23"></div>
+          </div>
+        </fieldset>
+
+        <fieldset data-for="colisao_com queda mal via">
+          <legend id="ac_vit_legend">Vítima</legend>
+          <div class="row">
+            <div class="fld"><label for="ac_vit_nome">Nome <span class="opt">vazio = não fornecidos</span></label><input id="ac_vit_nome"></div>
+            <div class="fld"><label for="ac_vit_cpf">CPF <span class="opt">opcional</span></label><input id="ac_vit_cpf" inputmode="numeric" data-mask="cpf" placeholder="Só os números"></div>
+          </div>
+        </fieldset>
+
+        <div>
+          <label class="check"><input type="checkbox" id="ac_socorro"> Órgãos / socorro no local (SAMU, Bombeiros, PM, CET…)</label>
+          <fieldset id="ac_socorro_box" hidden>
+            <legend>Órgãos no local</legend>
+            <div id="org_list"></div>
+            <button type="button" class="btn" id="org_add">+ Adicionar órgão</button>
+            <div class="hint" style="margin-bottom:10px">Adicione um bloco para cada órgão que compareceu.</div>
+          </fieldset>
+        </div>
+
+        <div class="sep"></div>
+        <div class="fld"><label for="ac_relato">Relato</label>
+          <textarea id="ac_relato" placeholder="Descreva o ocorrido ou use um texto pronto abaixo"></textarea>
+          <div class="chips" id="ac_relato_chips"></div>
+        </div>
+        <label class="check"><input type="checkbox" id="ac_bo"> Registro de B.O (PM)</label>
+        <fieldset id="bo_box" hidden>
+          <legend>Boletim de ocorrência</legend>
+          <div class="row">
+            <div class="fld"><label for="bo_num">Nº do B.O <span class="opt">vazio = em elaboração</span></label><input id="bo_num"></div>
+            <div class="fld"><label for="bo_unid">Unidade <span class="opt">opcional</span></label><input id="bo_unid" placeholder="Ex.: 21º DP / 3ª Cia PM"></div>
+          </div>
+          <div class="fld"><label for="bo_obs">Observação <span class="opt">opcional</span></label><input id="bo_obs"></div>
+          <button type="button" class="btn" id="bo_gen">Gerar só o complemento do B.O</button>
+          <div class="hint" style="margin-bottom:10px">Quando o B.O ficar pronto, volte aqui, digite o número e gere só o complemento. Os dados do acidente continuam preenchidos (não aperte Limpar antes).</div>
+        </fieldset>
+        <label class="check"><input type="checkbox" id="ac_op"> Operacional encaminhado ao local</label>
+        <div class="fld" id="ac_op_box" hidden><label for="ac_op_nome">Nome do operacional <span class="opt">opcional</span></label><input id="ac_op_nome" placeholder="Ex.: Nome do operacional"></div>
+        <div class="fld" data-for="via"><label for="ac_status">Status <span class="opt">opcional</span></label>
+          <input id="ac_status" value="Operacional a caminho para colher mais informações."></div>
+        <div class="fld"><label for="ac_desfecho">Desfecho <span class="opt">opcional</span></label>
+          <textarea id="ac_desfecho" style="min-height:60px"></textarea>
+          <div class="chips" id="ac_desfecho_chips"></div>
+        </div>
+        <div class="row">
+          <div class="fld"><label for="ac_acomp_tipo">Acompanhamento por</label>
+            <select id="ac_acomp_tipo"><option value="operador">Operador</option><option value="operacional">Operacional</option><option value="">Não incluir</option></select></div>
+          <div class="fld"><label for="ac_acomp_nome">Nome</label><input id="ac_acomp_nome" placeholder="Seu nome"></div>
+        </div>
+      </form>
+
+      <!-- ============ INTERFERÊNCIA ============ -->
+      <form id="f_interf" autocomplete="off" onsubmit="return false" hidden>
+        <div class="row">
+          <div class="fld"><label for="in_data">Data</label><input type="date" id="in_data"></div>
+          <div class="fld"><label for="in_linhas">Linhas afetadas</label><input id="in_linhas" placeholder="Ex.: 2720-10/31"></div>
+        </div>
+        <div class="fld"><label for="in_local">Local</label><input id="in_local" placeholder="Ex.: Rua Figueira da Polinésia, nº 1366"></div>
+        <div class="fld"><label for="in_pref">Prefixo que acionou o alerta <span class="opt">opcional</span></label><input id="in_pref" inputmode="numeric" placeholder="Ex.: 45534"></div>
+        <div class="row">
+          <div class="fld"><label for="in_inicio">Início</label><input type="time" id="in_inicio"></div>
+          <div class="fld"><label for="in_termino">Término</label><input type="time" id="in_termino" disabled></div>
+        </div>
+        <label class="check"><input type="checkbox" id="in_semprev" checked> Término sem previsão</label>
+
+        <div class="fld"><label for="in_motivo">Motivo</label>
+          <select id="in_motivo" data-outro>
+            <option value="">Selecione… (preenche o relato)</option>
+            <option value="obra">Obra (Operação Tapa-Buraco)</option>
+            <option value="recapeamento">Recapeamento / manutenção viária</option>
+            <option value="baile">Baile funk</option>
+            <option value="evento">Evento festivo de populares</option>
+            <option value="protesto">Protesto de moradores</option>
+            <option value="acidente">Acidente na via</option>
+            <option value="queda_arvore">Queda de árvore</option>
+            <option value="estacionados">Veículos estacionados na via</option>
+            <option value="semaforo">Problema semafórico</option>
+            <option value="__outro">Outro…</option>
+          </select>
+          <input id="in_motivo_outro" class="outro" hidden placeholder="Escreva o motivo (ex.: vazamento de água da Sabesp)">
+        </div>
+
+        <fieldset id="in_sem_box" hidden>
+          <legend>Tem desvio?</legend>
+          <label class="check"><input type="radio" name="in_sem_desvio" value="nao" checked> Não, sem desvio</label>
+          <label class="check"><input type="radio" name="in_sem_desvio" value="sim"> Sim, os coletivos estão em desvio</label>
+        </fieldset>
+
+        <fieldset id="in_resp_box" hidden>
+          <legend>Responsável pela obra</legend>
+          <div class="row">
+            <div class="fld"><label for="in_resp_nome">Supervisor / responsável <span class="opt">opcional</span></label><input id="in_resp_nome" placeholder="Ex.: Nome do responsável"></div>
+            <div class="fld"><label for="in_resp_emp">Empresa <span class="opt">opcional</span></label><input id="in_resp_emp" placeholder="Ex.: Nome da empresa"></div>
+          </div>
+        </fieldset>
+
+        <fieldset id="in_desvios_box">
+          <legend>Desvios</legend>
+          <div class="fld"><label for="in_tp">Sentido TP <span class="opt">opcional</span></label>
+            <textarea id="in_tp" style="min-height:56px"></textarea>
+            <div class="chips"><button type="button" class="chip" data-fill="in_tp" data-text="Sem possibilidade de desvio.">Sem possibilidade de desvio</button></div>
+          </div>
+          <div class="fld"><label for="in_ts">Sentido TS <span class="opt">opcional</span></label>
+            <textarea id="in_ts" style="min-height:56px"></textarea>
+            <div class="chips"><button type="button" class="chip" data-fill="in_ts" data-text="Sem possibilidade de desvio.">Sem possibilidade de desvio</button></div>
+          </div>
+        </fieldset>
+
+        <div class="fld"><label for="in_relato">Relato</label><textarea id="in_relato"></textarea></div>
+        <label class="check"><input type="checkbox" id="in_op"> Operacional encaminhado à interferência</label>
+        <div class="fld" id="in_op_box" hidden><label for="in_op_nome">Nome do operacional <span class="opt">opcional</span></label><input id="in_op_nome" placeholder="Ex.: Nome do operacional"></div>
+        <div class="fld"><label for="in_obs">Observação <span class="opt">opcional, ex.: agentes no local</span></label>
+          <input id="in_obs" placeholder="Ex.: Agentes da CET no local realizando o acompanhamento do QRU, VTR 0000."></div>
+        <div class="fld"><label for="in_atual">Atualização <span class="opt">opcional</span></label>
+          <textarea id="in_atual" style="min-height:56px"></textarea>
+          <div class="chips"><button type="button" class="chip" data-fill="in_atual" data-text="CET no local organizou a utilização temporária de uma faixa da pista sentido [SENTIDO] para dar vazão aos coletivos presos na interdição. VTR da CET: [Nº], agente [NOME].">CET liberou faixa</button></div>
+        </div>
+        <div class="fld"><label for="in_liberada">Via liberada às <span class="opt">deixe vazio se ainda interditada</span></label><input type="time" id="in_liberada"></div>
+      </form>
+
+      <!-- ============ ATENDE ============ -->
+      <form id="f_atende" autocomplete="off" onsubmit="return false" hidden>
+        <div class="fld"><label for="at_tipo">Tipo de e-mail</label>
+          <select id="at_tipo">
+            <option value="rendicao">Impossibilidade de acionamento de rendição</option>
+            <option value="sos">Van em S.O.S</option>
+          </select>
+        </div>
+        <div class="row">
+          <div class="fld"><label for="at_data">Data</label><input type="date" id="at_data"></div>
+          <div class="fld"><label for="at_van">Van</label><input id="at_van" placeholder="Ex.: 45 824"></div>
+        </div>
+
+        <div data-at="rendicao">
+          <div class="row">
+            <div class="fld"><label for="at_inicio">Início de operação</label><input type="time" id="at_inicio"></div>
+            <div class="fld"><label for="at_rendicao">Rendição</label><input type="time" id="at_rendicao"></div>
+          </div>
+          <div class="fld"><label for="at_motivo">Motivo</label>
+            <select id="at_motivo" data-outro>
+              <option value="transmissao">Sem transmissão (estava sem partida)</option>
+              <option value="avl">Problema no acionamento do AVL</option>
+              <option value="__outro">Outro…</option>
+            </select>
+            <input id="at_motivo_outro" class="outro" hidden placeholder="Escreva o motivo">
+          </div>
+          <label class="check"><input type="checkbox" id="at_normal" checked> A van segue em operação normal</label>
+        </div>
+
+        <div data-at="sos" hidden>
+          <div class="row">
+            <div class="fld"><label for="at_hora">Hora</label><input type="time" id="at_hora"></div>
+            <div class="fld"><label for="at_local">Local <span class="opt">opcional</span></label><input id="at_local"></div>
+          </div>
+          <div class="fld"><label for="at_defeito">Defeito <span class="opt">escolha ou digite</span></label>
+            <input id="at_defeito" list="at_def_list" placeholder="Ex.: Sem partida">
+            <datalist id="at_def_list">
+              <option value="Sem partida"><option value="Sem transmissão"><option value="Pneu furado">
+              <option value="Pane elétrica"><option value="Vazamento de óleo"><option value="Ar-condicionado inoperante">
+              <option value="Elevador inoperante"><option value="Falha na transmissão">
+            </datalist>
+          </div>
+          <div class="fld"><label for="at_situacao">Situação</label>
+            <select id="at_situacao" data-outro>
+              <option>Aguardando S.O.S no local.</option>
+              <option>Recolhendo a pedido do S.O.S.</option>
+              <option>Recolhendo para realizar manutenção e reparos na van.</option>
+              <option value="__outro">Outra…</option>
+            </select>
+            <input id="at_situacao_outro" class="outro" hidden placeholder="Descreva a situação">
+          </div>
+          <div class="fld"><label for="at_desfecho">Desfecho</label>
+            <select id="at_desfecho" data-outro>
+              <option value="">Em andamento (sem desfecho ainda)</option>
+              <option>A van recebeu os primeiros reparos no local e está recolhendo no guincho para as dependências da empresa, onde passará pelos devidos reparos e manutenções.</option>
+              <option>A van já se encontra nas dependências da empresa para os devidos reparos e manutenções.</option>
+              <option>O S.O.S foi até o local, realizou os reparos e a van retornou à operação.</option>
+              <option value="__outro">Outro…</option>
+            </select>
+            <input id="at_desfecho_outro" class="outro" hidden placeholder="Descreva o desfecho">
+          </div>
+        </div>
+      </form>
+
+      <!-- ============ MENSAGENS ============ -->
+      <form id="f_msgs" autocomplete="off" onsubmit="return false" hidden>
+        <fieldset>
+          <legend>Lembretes do turno</legend>
+          <div class="row">
+            <div class="fld"><label for="lb_inicio">Início do turno</label><input type="time" id="lb_inicio" value="22:00"></div>
+            <div class="fld"><label for="lb_int">Intervalos em horas <span class="opt">separados por vírgula</span></label><input id="lb_int" value="2, 2, 3"></div>
+          </div>
+          <div class="fld"><label for="lb_msg">Mensagem do lembrete</label><select id="lb_msg"></select></div>
+          <span class="lbl">Horários</span>
+          <div class="sched" id="lb_sched"></div>
+          <div class="actions">
+            <button type="button" class="btn primary" id="lb_toggle">Ativar lembretes</button>
+            <button type="button" class="btn" id="lb_test">Testar aviso</button>
+          </div>
+          <div class="hint">Deixe o gerador aberto durante o turno (pode minimizar). Na hora marcada ele toca um bipe e mostra a mensagem pronta para copiar ou abrir no WhatsApp.</div>
+        </fieldset>
+        <span class="lbl">Mensagens prontas <span class="opt">as alterações ficam salvas neste computador</span></span>
+        <div id="msg_list" style="margin-top:8px"></div>
+        <button type="button" class="btn" id="msg_add">+ Adicionar mensagem</button>
+      </form>
+
+      <!-- ============ ENCAMINHAMENTOS ============ -->
+      <form id="f_enc" autocomplete="off" onsubmit="return false" hidden>
+        <div class="actions" style="margin:0 0 14px"><button type="button" class="btn" id="enc_pull">Puxar dados do último alerta gerado</button></div>
+        <div class="row">
+          <div class="fld"><label for="enc_num">Nº da ocorrência</label><input id="enc_num" inputmode="numeric"></div>
+          <div class="fld"><label for="enc_data">Data</label><input type="date" id="enc_data"></div>
+        </div>
+        <div class="row">
+          <div class="fld"><label for="enc_cat">Tipo de ocorrência</label>
+            <select id="enc_cat"><option>Quebra</option><option>Acidente</option><option>Interferência na via</option><option>Atende</option></select></div>
+          <div class="fld"><label for="enc_det">Detalhe <span class="opt">opcional</span></label><input id="enc_det" placeholder="Ex.: Pneu furado"></div>
+        </div>
+        <div class="row">
+          <div class="fld"><label for="enc_col">Prefixo <span class="opt">opcional</span></label><input id="enc_col" inputmode="numeric"></div>
+          <div class="fld"><label for="enc_linha">Linha <span class="opt">opcional</span></label><input id="enc_linha"></div>
+        </div>
+        <div class="fld"><label for="enc_local">Local <span class="opt">opcional</span></label><input id="enc_local"></div>
+        <div class="fld"><span class="lbl">Print da ocorrência <span class="opt">opcional</span></span>
+          <div class="drop" id="enc_drop">Aperte <b>Ctrl+V</b> para colar o print aqui, arraste a imagem ou clique para escolher um arquivo.</div>
+          <input type="file" id="enc_file" accept="image/*" hidden>
+          <img id="enc_img" alt="Print da ocorrência" hidden>
+          <div class="actions" id="enc_img_actions" hidden>
+            <button type="button" class="btn" id="enc_img_copy">Copiar print</button>
+            <button type="button" class="btn" id="enc_img_del">Remover print</button>
+          </div>
+        </div>
+      </form>
+
+      <div class="actions" id="main_actions">
+        <button type="button" class="btn primary" id="btn_gen">Gerar e copiar</button>
+        <button type="button" class="btn" id="btn_clear">Limpar formulário</button>
+      </div>
+      <div class="hint" id="main_hint">Campos vazios marcados como opcionais não aparecem no alerta.</div>
+    </div>
+
+    <aside class="panel out" aria-live="polite">
+      <h2>Prévia do alerta</h2>
+      <div class="preview" id="preview"><span class="empty">Preencha os campos e aperte Gerar e copiar.</span></div>
+      <div class="warn" id="warn" hidden></div>
+      <div id="subj_row" class="fld" style="margin-top:12px" hidden>
+        <label for="subj">Assunto do e-mail</label>
+        <div style="display:flex;gap:8px"><input id="subj" readonly><button type="button" class="btn" id="btn_subj">Copiar</button></div>
+      </div>
+      <textarea id="code" readonly aria-label="HTML gerado"></textarea>
+      <div class="actions">
+        <button type="button" class="btn primary" id="btn_copy">Copiar HTML</button>
+        <a class="btn" id="wa_link" target="_blank" rel="noopener" hidden>Abrir no WhatsApp</a>
+      </div>
+    </aside>
+  </div>
+</div>
+<div class="lembrete" id="lembrete" role="alert" hidden>
+  <div class="lbl" id="lb_title">Lembrete</div>
+  <p id="lb_text" style="margin:6px 0 10px;white-space:pre-wrap"></p>
+  <div class="actions">
+    <button type="button" class="btn primary" id="lb_copy">Copiar mensagem</button>
+    <a class="btn" id="lb_wa" target="_blank" rel="noopener">Abrir no WhatsApp</a>
+    <button type="button" class="btn" id="lb_close">Fechar</button>
+  </div>
+</div>
+<div class="toast" id="toast">HTML copiado</div>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const v = id => (($(id) && $(id).value) || '').trim();
+  const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n+/g,' ');
+  const fd = d => { if(!d) return ''; const p = d.split('-'); return p[2]+'/'+p[1]+'/'+p[0]; };
+  const font = (c, s) => s || '';
+  const SMALL = new Set(['a','o','as','os','de','do','da','dos','das','em','na','no','e','com','sem','ao','à','para','por']);
+  const fixSiglas = s => s.replace(/\bqru\b/gi, 'QRU').replace(/b\.o/gi, 'B.O').replace(/s\.o\.s/gi, 'S.O.S');
+  const cap = s => { const t = String(s).toLowerCase(); return fixSiglas(t.charAt(0).toUpperCase() + t.slice(1)); };
+  const titleCase = s => fixSiglas(String(s).toLowerCase().split(' ').map((w, i) => (i > 0 && SMALL.has(w)) ? w : w.replace(/^(\(?)(\S)/, (m, p, c) => p + c.toUpperCase())).join(' '));
+  const L = (label, val) => val ? '<br><br><b>'+cap(label)+':</b> '+val : '';
+  const pick = id => { const s = v(id); return s === '__outro' ? v(id+'_outro') : s; };
+
+  let cat = 'sos';
+
+  // ---------- preferências (cabeçalho e nome) ----------
+  function load(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+  function save(k,val){ try{ localStorage.setItem(k,val); }catch(e){} }
+  const savedHdr = load('cco_header'); if(savedHdr) $('cfg_header').value = savedHdr;
+  const savedNome = load('cco_nome'); if(savedNome) $('ac_acomp_nome').value = savedNome;
+  $('cfg_header').addEventListener('change', e => save('cco_header', e.target.value));
+  $('ac_acomp_nome').addEventListener('change', e => save('cco_nome', e.target.value));
+
+  const header = (title, pre) => {
+    const h = v('cfg_header');
+    return (h ? '<center><b>'+esc(h)+'</b></center>\n' : '') + '<center><b><u>' + (pre === undefined ? 'Alerta de ' : pre) + titleCase(title) + '</u></b></center>';
+  };
+
+  // ---------- data e hora padrão ----------
+  function pad(n){ return String(n).padStart(2,'0'); }
+  function setNow(){
+    const n = new Date();
+    const d = n.getFullYear()+'-'+pad(n.getMonth()+1)+'-'+pad(n.getDate());
+    const t = pad(n.getHours())+':'+pad(n.getMinutes());
+    $('ac_data').value = d; $('ac_hora').value = t;
+    $('in_data').value = d; $('in_inicio').value = t;
+    $('at_data').value = d; $('at_hora').value = t;
+    $('enc_data').value = d;
+  }
+  setNow();
+
+  // ---------- abas ----------
+  document.querySelectorAll('.tab').forEach(b => b.addEventListener('click', () => {
+    cat = b.dataset.cat;
+    document.body.dataset.cat = cat;
+    $('bar_name').textContent = b.childNodes[0].textContent.trim();
+    $('bar_sub').textContent = b.querySelector('small').textContent;
+    closeMenu();
+    document.querySelectorAll('.tab').forEach(t => t.setAttribute('aria-selected', t === b ? 'true' : 'false'));
+    ['sos','acid','interf','atende','msgs','enc'].forEach(c => $('f_'+c).hidden = c !== cat);
+    $('btn_copy').textContent = cat === 'enc' ? 'Copiar mensagem' : cat === 'atende' ? 'Copiar corpo do e-mail' : 'Copiar HTML';
+    document.querySelector('.out h2').textContent = cat === 'enc' ? 'Prévia da mensagem' : cat === 'atende' ? 'Prévia do e-mail' : 'Prévia do alerta';
+    if(cat === 'enc' && lastAlert && lastAlert !== pulledAlert) fillEnc();
+  }));
+
+  // ---------- menu hambúrguer ----------
+  function isOpen(){ return $('drawer').classList.contains('open'); }
+  function openMenu(){
+    $('drawer').classList.add('open'); $('drawer').setAttribute('aria-hidden', 'false');
+    $('scrim').hidden = false; $('menu_btn').setAttribute('aria-expanded', 'true');
+    const a = document.querySelector('.tab[aria-selected="true"]'); setTimeout(() => a && a.focus(), 60);
+  }
+  function closeMenu(){
+    if(!isOpen()) return;
+    $('drawer').classList.remove('open'); $('drawer').setAttribute('aria-hidden', 'true');
+    $('scrim').hidden = true; $('menu_btn').setAttribute('aria-expanded', 'false'); $('menu_btn').focus();
+  }
+  $('menu_btn').addEventListener('click', () => isOpen() ? closeMenu() : openMenu());
+  $('menu_close').addEventListener('click', closeMenu);
+  $('scrim').addEventListener('click', closeMenu);
+
+  // ---------- selects com "Outro…" ----------
+  document.querySelectorAll('select[data-outro]').forEach(s => {
+    s.addEventListener('change', () => {
+      const o = $(s.id+'_outro'); o.hidden = s.value !== '__outro';
+      if(!o.hidden) o.focus();
+    });
+  });
+
+  // ---------- chips de texto pronto ----------
+  document.addEventListener('click', e => {
+    const c = e.target.closest('.chip[data-fill]');
+    if(!c) return;
+    const t = $(c.dataset.fill);
+    t.value = fillTokens(c.dataset.text);
+    t.focus();
+  });
+  // Atualiza o [VIA] (e a rua anterior) nos textos quando o Local muda
+  function syncLocal(localId, targets){
+    let last = '';
+    $(localId).addEventListener('change', () => {
+      const val = v(localId);
+      targets.forEach(tid => {
+        const t = $(tid); let s = t.value; if(!s) return;
+        if(last && last !== val && s.includes(last)) s = s.split(last).join(val || '[VIA]');
+        else if(val) s = s.split('[VIA]').join(val);
+        t.value = s;
+      });
+      last = val;
+    });
+  }
+  syncLocal('in_local', ['in_relato','in_tp','in_ts','in_atual']);
+  syncLocal('ac_local', ['ac_relato','ac_desfecho']);
+  $('ac_hora').addEventListener('change', () => {
+    ['ac_relato','ac_desfecho'].forEach(id => { if(v('ac_hora')) $(id).value = $(id).value.split('[HORA]').join(v('ac_hora')); });
+  });
+  function fillTokens(s){
+    const local = cat === 'interf' ? v('in_local') : v('ac_local');
+    return s.replace(/\[VIA\]/g, local || '[VIA]')
+            .replace(/\[HORA\]/g, v('ac_hora') || '[HORA]');
+  }
+
+  // ---------- ACIDENTE: textos prontos ----------
+  const SOCORRO_DESF = 'Após o(a) usuário(a) ser socorrido(a), o coletivo foi liberado para retornar à operação.';
+  const ACID = {
+    colisao_sem: {
+      title:'COLISÃO SEM VÍTIMAS', qru:'Colisão sem vítimas.',
+      relato:[
+        ['Veículo estacionado','Conforme informações coletadas pelo operacional, o condutor trafegava com o coletivo pela [VIA] por volta das [HORA] e não se atentou ao espaço de passagem na via, resultando na colisão da parte frontal do coletivo contra a lateral de um veículo de terceiro que estava estacionado.'],
+        ['Genérico','Conforme informações coletadas pelo operacional, o condutor trafegava com o coletivo pela [VIA] por volta das [HORA] quando [DESCREVER A COLISÃO].']
+      ],
+      desf:[
+        ['Avarias mínimas','Coletivo retornou à operação, pois as avarias foram mínimas.'],
+        ['Recolheu','Coletivo recolhido às dependências da empresa para avaliação das avarias.']
+      ]
+    },
+    colisao_com: {
+      title:'COLISÃO COM VÍTIMAS', qru:'Colisão com vítimas.',
+      relato:[['Genérico','Conforme informações coletadas pelo operacional, o condutor trafegava com o coletivo pela [VIA] por volta das [HORA] quando [DESCREVER A COLISÃO]. [DESCREVER A SITUAÇÃO DA VÍTIMA].']],
+      desf:[['Após socorro',SOCORRO_DESF],['Recolheu','Coletivo recolhido às dependências da empresa para avaliação das avarias.']]
+    },
+    queda: {
+      title:'QUEDA DE USUÁRIO', qru:'Queda de usuário.',
+      relato:[
+        ['Passageiro alcoolizado','Segundo informações do operacional, o condutor relata que embarcou o passageiro por volta das [HORA] na [VIA DE EMBARQUE], aparentemente alcoolizado, e na curva para acessar a [VIA] o passageiro, que estava sentado no banco dianteiro, caiu. O condutor parou o coletivo e acionou o SAMU. Operacional no local, em conjunto com o condutor, aguardando a VT do SAMU.'],
+        ['Genérico','Segundo informações do operacional, o condutor relata que [DESCREVER O OCORRIDO].']
+      ],
+      desf:[['Após SAMU','Após o usuário ser socorrido pelo SAMU, o coletivo foi liberado para retornar à operação.']]
+    },
+    mal: {
+      title:'ATENDIMENTO A MAL SÚBITO', qru:'Passageiro(a) passou mal dentro do coletivo.',
+      relato:[
+        ['Recusou ajuda','Em contato com o condutor, fomos informados de que a terceira dispensou o acionamento do SAMU ou de ambulância, pois se dirigiria a uma UPA ou UBS por conta própria, recusando qualquer auxílio oferecido por nosso colaborador.'],
+        ['SAMU acionado','Em contato com o condutor, fomos informados de que um(a) passageiro(a) passou mal dentro do coletivo. O condutor parou o coletivo e acionou o SAMU, aguardando atendimento no local.']
+      ],
+      desf:[
+        ['Saiu por meios próprios','Após a terceira deixar o local por meios próprios, o coletivo foi liberado para retornar à operação.'],
+        ['Após SAMU',SOCORRO_DESF]
+      ]
+    },
+    via: {
+      title:'ACIDENTE NA VIA (ENTRE TERCEIROS)', qru:'Acidente entre terceiros.',
+      relato:[
+        ['Atropelamento','Segundo informações do operacional, o acidente ocorreu entre terceiros: um veículo particular atropelou um pedestre que tentava atravessar a via.'],
+        ['Colisão entre veículos','Segundo informações do operacional, o acidente ocorreu entre terceiros, envolvendo [VEÍCULOS], na [VIA].']
+      ],
+      desf:[['Via liberada','Via liberada e operação normalizada.']]
+    }
+  };
+
+  function renderAcid(){
+    const t = v('ac_tipo');
+    document.querySelectorAll('#f_acid [data-for]').forEach(el => {
+      el.hidden = !el.dataset.for.split(' ').includes(t);
+    });
+    $('ac_vit_legend').textContent = t === 'mal' ? 'Terceiro(a) que passou mal' : 'Vítima';
+    const mk = (box, list, target) => {
+      $(box).innerHTML = '';
+      list.forEach(([label, text]) => {
+        const b = document.createElement('button');
+        b.type = 'button'; b.className = 'chip'; b.textContent = label;
+        b.dataset.fill = target; b.dataset.text = text;
+        $(box).appendChild(b);
+      });
+    };
+    mk('ac_relato_chips', ACID[t].relato, 'ac_relato');
+    mk('ac_desfecho_chips', ACID[t].desf, 'ac_desfecho');
+  }
+  $('ac_tipo').addEventListener('change', renderAcid);
+  renderAcid();
+  $('ac_socorro').addEventListener('change', e => {
+    $('ac_socorro_box').hidden = !e.target.checked;
+    if(e.target.checked && !$('org_list').children.length) addOrg('SAMU');
+  });
+  $('ac_bo').addEventListener('change', e => $('bo_box').hidden = !e.target.checked);
+
+  // ---------- órgãos no local (vários) ----------
+  const ORG_PREF = { 'SAMU':'VT', 'Bombeiros':'UR' };
+  function addOrg(tipo){
+    const d = document.createElement('div'); d.className = 'org';
+    d.innerHTML =
+      '<div class="row">' +
+        '<div class="fld"><label>Órgão<select class="o-tipo" style="margin-top:4px"><option>SAMU</option><option>Bombeiros</option><option>PM</option><option>Polícia de Trânsito</option><option>CET</option><option>GCM</option><option value="__outro">Outro…</option></select></label>' +
+        '<input class="o-outro" hidden placeholder="Qual órgão?" style="margin-top:6px"></div>' +
+        '<div class="fld"><label>Viatura <span class="opt">opcional</span><input class="o-num" spellcheck="false" placeholder="Ex.: 1169.1" style="margin-top:4px"></label></div>' +
+      '</div><div class="row">' +
+        '<div class="fld"><label>Socorrista / agente <span class="opt">opcional</span><input class="o-resp" spellcheck="false" style="margin-top:4px"></label></div>' +
+        '<div class="fld"><label>Destino da vítima <span class="opt">opcional</span><input class="o-dest" spellcheck="false" placeholder="Ex.: UPA Tatuapé" style="margin-top:4px"></label></div>' +
+      '</div><button type="button" class="btn o-del">Remover órgão</button>';
+    const sel = d.querySelector('.o-tipo'), out = d.querySelector('.o-outro');
+    if(tipo) sel.value = tipo;
+    sel.addEventListener('change', () => { out.hidden = sel.value !== '__outro'; if(!out.hidden) out.focus(); });
+    d.querySelector('.o-del').addEventListener('click', () => d.remove());
+    $('org_list').appendChild(d);
+  }
+  $('org_add').addEventListener('click', () => {
+    const usados = Array.from(document.querySelectorAll('#org_list .o-tipo')).map(s => s.value);
+    const prox = ['SAMU','PM','CET','Bombeiros','Polícia de Trânsito','GCM'].find(o => !usados.includes(o)) || 'SAMU';
+    addOrg(prox);
+  });
+  function orgLines(){
+    return Array.from(document.querySelectorAll('#org_list .org')).map(r => {
+      const g = s => (r.querySelector(s).value || '').trim();
+      let o = g('.o-tipo'); if(o === '__outro') o = g('.o-outro'); if(!o) return '';
+      const n = g('.o-num'), p = g('.o-resp'), d = g('.o-dest');
+      const resgate = /SAMU|Bombeiros/i.test(o);
+      let s = esc(o) + (n ? ' – ' + (ORG_PREF[o] || 'VTR') + ' ' + esc(n) : '');
+      if(p) s += ', ' + (resgate ? 'socorrista ' : 'agente ') + esc(p);
+      if(d) s += '; vítima encaminhada para ' + esc(d);
+      return s + '.';
+    }).filter(Boolean);
+  }
+
+  // ---------- B.O ----------
+  function boLine(){
+    if(!$('ac_bo').checked) return '';
+    const num = esc(v('bo_num')), un = esc(v('bo_unid'));
+    if(!num) return L('B.O', 'Em elaboração pela PM, será enviado em complemento.');
+    return L('B.O Nº', font('RED', '<b>' + num + '</b>') + (un ? ' – ' + un : ''));
+  }
+  function genBO(){
+    const t = v('ac_tipo'), cfg = ACID[t], miss = [];
+    const num = esc(v('bo_num')); if(!num) miss.push('nº do B.O');
+    const lines = [header('COMPLEMENTO DE ALERTA – B.O', ''),
+      L('REFERENTE A', cfg.title),
+      t !== 'via' ? L('COLETIVO', esc(v('ac_coletivo'))) : '',
+      L('LINHA', font('BLUE', esc(v('ac_linha')))),
+      L('DATA', font('BLUE', fd(v('ac_data')))),
+      L('HORA', font('BLUE', esc(v('ac_hora')))),
+      L('LOCAL', font('BLUE', esc(v('ac_local')))),
+      L('B.O Nº', num ? font('RED', '<b>' + num + '</b>') : ''),
+      L('UNIDADE', esc(v('bo_unid'))),
+      L('OBS', esc(v('bo_obs')))];
+    return { html: lines.filter(Boolean).join('\n'), miss };
+  }
+  $('bo_gen').addEventListener('click', () => generate(genBO()));
+
+  // ---------- máscaras (CPF e placa) ----------
+  function cpfOk(d){
+    if(d.length !== 11 || /^(\d)\1+$/.test(d)) return false;
+    for(let t = 9; t < 11; t++){
+      let s = 0; for(let i = 0; i < t; i++) s += +d[i] * (t + 1 - i);
+      if(((s * 10) % 11) % 10 !== +d[t]) return false;
+    }
+    return true;
+  }
+  document.addEventListener('input', e => {
+    const el = e.target, m = el.dataset ? el.dataset.mask : null; if(!m) return;
+    if(m === 'cpf'){
+      const d = el.value.replace(/\D/g, '').slice(0, 11);
+      let f = d;
+      if(d.length > 9) f = d.slice(0,3) + '.' + d.slice(3,6) + '.' + d.slice(6,9) + '-' + d.slice(9);
+      else if(d.length > 6) f = d.slice(0,3) + '.' + d.slice(3,6) + '.' + d.slice(6);
+      else if(d.length > 3) f = d.slice(0,3) + '.' + d.slice(3);
+      el.value = f;
+      const bad = d.length === 11 && !cpfOk(d);
+      el.classList.toggle('invalid', bad); el.title = bad ? 'CPF inválido: confira os números' : '';
+    }
+    if(m === 'placa') el.value = el.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 7);
+  });
+
+  // ---------- corretor ortográfico ----------
+  const SPELL_IDS = ['ac_status','in_obs','bo_obs','at_defeito','enc_det'];
+  document.querySelectorAll('textarea, input').forEach(el => {
+    if(['checkbox','radio','date','time','file'].includes(el.type)) return;
+    const on = (el.tagName === 'TEXTAREA' && !el.readOnly) || /_outro$/.test(el.id) || SPELL_IDS.includes(el.id);
+    el.spellcheck = on; if(on) el.setAttribute('lang', 'pt-BR');
+  });
+
+  // ---------- INTERFERÊNCIA: motivos ----------
+  const MOTIVOS = {
+    obra:'Segundo informações do operacional, a [VIA] está interditada para obras da Operação Tapa-Buraco. Com isso, os coletivos não conseguem acessar o ponto notável da linha.',
+    recapeamento:'Segundo informações do operacional, a [VIA] está interditada devido a manutenção viária (recapeamento), sendo necessário realizar desvio.',
+    baile:'Segundo informações do operacional, devido a baile funk na [VIA], os coletivos estão impedidos de seguir pelo itinerário padrão, sendo necessário realizar desvio.',
+    evento:'Segundo informações do operacional, a [VIA] está interditada devido a evento festivo de populares, bloqueando a passagem dos coletivos.',
+    protesto:'Segundo informações do operacional, a [VIA] está interditada devido a protesto de moradores, bloqueada com móveis e barricadas montadas pelos manifestantes.',
+    acidente:'Segundo informações do operacional, a [VIA] está interditada devido a acidente no local.',
+    queda_arvore:'Segundo informações do operacional, a [VIA] está interditada devido a queda de árvore, impedindo a passagem dos coletivos.',
+    estacionados:'Segundo informações do operacional, há veículos estacionados na [VIA], o que impossibilita a passagem dos coletivos pelo local, sendo necessário realizar desvio.'
+  };
+  const SEMAFORO = {
+    nao:'Segundo informações do operacional, o semáforo localizado na [VIA] está em amarelo intermitente, ocasionando lentidão no trânsito do local. Não há necessidade de desvio.',
+    sim:'Segundo informações do operacional, o semáforo localizado na [VIA] está em amarelo intermitente, comprometendo a passagem dos coletivos pelo local, sendo necessário realizar desvio.'
+  };
+  function semDesvioOpt(){
+    const r = document.querySelector('input[name="in_sem_desvio"]:checked');
+    return r ? r.value : 'nao';
+  }
+  function semSemDesvio(){ return v('in_motivo') === 'semaforo' && semDesvioOpt() === 'nao'; }
+  function updSem(){
+    const isSem = v('in_motivo') === 'semaforo';
+    $('in_sem_box').hidden = !isSem;
+    $('in_desvios_box').hidden = semSemDesvio();
+    if(isSem) $('in_relato').value = fillTokens(SEMAFORO[semDesvioOpt()]);
+  }
+  document.querySelectorAll('input[name="in_sem_desvio"]').forEach(r => r.addEventListener('change', updSem));
+  $('in_motivo').addEventListener('change', e => {
+    if(MOTIVOS[e.target.value]) $('in_relato').value = fillTokens(MOTIVOS[e.target.value]);
+    updSem();
+  });
+  $('in_motivo_outro').addEventListener('input', e => {
+    const m = e.target.value.trim();
+    if(m) $('in_relato').value = fillTokens('Segundo informações do operacional, a [VIA] está interditada devido a ' + m + ', sendo necessário realizar desvio.');
+  });
+  $('in_semprev').addEventListener('change', e => {
+    $('in_termino').disabled = e.target.checked;
+    if(!e.target.checked) $('in_termino').focus();
+  });
+
+  // ---------- geradores ----------
+  function updDD(){
+    const sel = Array.from(document.querySelectorAll('#sos_defeitos input:checked')).map(c => c.value);
+    const t = $('sos_dd_txt');
+    t.textContent = sel.length ? sel.length + ' selecionado' + (sel.length > 1 ? 's' : '') + ': ' + sel.join(', ') : 'Selecione os defeitos';
+    t.classList.toggle('vazio', !sel.length);
+  }
+  $('sos_defeitos').addEventListener('change', updDD);
+  document.addEventListener('click', e => { if(!$('sos_dd').contains(e.target)) $('sos_dd').open = false; });
+  function defeitos(){
+    const list = Array.from(document.querySelectorAll('#sos_defeitos input:checked')).map(c => c.value);
+    const outro = v('sos_defeito_outro'); if(outro) list.push(outro);
+    const fixed = list.map((d, i) => i === 0 ? d.charAt(0).toUpperCase() + d.slice(1) : d.charAt(0).toLowerCase() + d.slice(1));
+    if(fixed.length < 2) return fixed.join('');
+    return fixed.slice(0, -1).join(', ') + ' e ' + fixed[fixed.length - 1];
+  }
+  function genSOS(){
+    const miss = [];
+    const col = esc(v('sos_coletivo'));
+    const def = esc(defeitos());
+    if(!col) miss.push('coletivo');
+    if(!def) miss.push('defeito');
+    const colFmt = col ? font('RED','<b>'+col+'</b>') : '';
+    const lines = [header('COLETIVO EM S.O.S')];
+    lines.push($('sos_retif').checked ? L('RETIFICANDO, ALERTA REFERENTE AO COLETIVO', colFmt) : L('COLETIVO', colFmt));
+    lines.push(L('LINHA', font('BLUE', esc(v('sos_linha')))));
+    lines.push(L('LOCAL', font('BLUE', esc(v('sos_local')))));
+    lines.push(L('DEFEITO', def));
+    lines.push(L('SITUAÇÃO', esc(pick('sos_situacao'))));
+    lines.push(opLine('sos'));
+    const des = esc(pick('sos_desfecho'));
+    if(des) lines.push(L('Desfecho', des));
+    return { html: lines.filter(Boolean).join('\n'), miss };
+  }
+
+  function genAcid(){
+    const t = v('ac_tipo'), cfg = ACID[t], miss = [];
+    const has = list => list.split(' ').includes(t);
+    const lines = [header(cfg.title)];
+    if(has('colisao_sem colisao_com queda mal')){
+      const col = esc(v('ac_coletivo')); if(!col) miss.push('coletivo');
+      lines.push(L('COLETIVO', col));
+    }
+    lines.push(L('LINHA', font('BLUE', esc(v('ac_linha')))));
+    lines.push(L('DATA', font('BLUE', fd(v('ac_data')))));
+    lines.push(L('HORA', font('BLUE', esc(v('ac_hora')))));
+    const local = esc(v('ac_local')); if(!local) miss.push('local');
+    lines.push(L('LOCAL', font('BLUE', local)));
+    lines.push(L('QRU', cfg.qru));
+    if(t === 'via') lines.push(prefLine('ac'));
+
+    if(has('colisao_sem colisao_com queda mal')){
+      const nome = esc(v('ac_cond_nome')), re = esc(v('ac_cond_re')), cpf = esc(v('ac_cond_cpf'));
+      if(!nome) miss.push('nome do condutor');
+      let s = nome; if(re) s += ' (RE '+re+')';
+      if(cpf) s += ' / CPF: '+cpf;
+      lines.push(L('DADOS DO CONDUTOR', s.trim()));
+    }
+    if(has('colisao_sem colisao_com')){
+      const veic = esc(v('ac_veic')), placa = esc(v('ac_placa'));
+      let s = veic; if(placa) s += (veic ? ' / ' : '') + 'Placa: '+placa;
+      lines.push(L('DADOS DO(A) TERCEIRO(A)', s.trim()));
+    }
+    if(has('colisao_com queda mal via')){
+      const nome = esc(v('ac_vit_nome')), cpf = esc(v('ac_vit_cpf'));
+      let s = nome || (t === 'mal' ? 'Não cedidos pelo(a) mesmo(a)' : 'Não fornecidos');
+      if(cpf) s += ' / CPF: '+cpf;
+      lines.push(L(t === 'mal' ? 'DADOS DO(A) TERCEIRO(A)' : 'DADOS DA VÍTIMA', s));
+    }
+    const relato = esc(fillTokens(v('ac_relato'))); if(!relato) miss.push('relato');
+    lines.push(L('RELATO', relato));
+
+    if($('ac_socorro').checked){
+      const org = orgLines();
+      if(org.length) lines.push('<br><br><b>Órgãos no local:</b>' + org.map(o => '\n<br>- ' + o).join(''));
+    }
+    const cpfBad = ['ac_cond_cpf','ac_vit_cpf'].some(id => !$(id).closest('[hidden]') && $(id).classList.contains('invalid'));
+    if(cpfBad) miss.push('um CPF parece estar errado');
+    const bo = boLine(); if(bo) lines.push(bo);
+    lines.push(opLine('ac'));
+    if(has('via')) lines.push(L('STATUS', esc(v('ac_status'))));
+    lines.push(L('DESFECHO', esc(fillTokens(v('ac_desfecho')))));
+    const at = v('ac_acomp_tipo'), an = esc(v('ac_acomp_nome'));
+    if(at && an) lines.push('<br><br><b>Acompanhamento do QRU realizado pelo '+at+': '+an+'.</b>');
+    return { html: lines.filter(Boolean).join('\n'), miss };
+  }
+
+  function genInterf(){
+    const miss = [];
+    const lines = [header('INTERFERÊNCIA NA VIA')];
+    const local = esc(v('in_local')); if(!local) miss.push('local');
+    const linhas = esc(v('in_linhas')); if(!linhas) miss.push('linhas afetadas');
+    lines.push(L('DATA', font('BLUE', fd(v('in_data')))));
+    lines.push(L('LOCAL', font('BLUE', local)));
+    lines.push(L('LINHAS AFETADAS', font('BLUE', linhas)));
+    lines.push(prefLine('in'));
+    lines.push(L('HORÁRIO DE INÍCIO', font('BLUE', esc(v('in_inicio')))));
+    const term = $('in_semprev').checked ? 'Sem previsão no momento' : esc(v('in_termino'));
+    lines.push(L('HORÁRIO DE TÉRMINO', font('BLUE', term)));
+    const tp = esc(v('in_tp')), ts = esc(v('in_ts'));
+    if(semSemDesvio()){
+      lines.push('<br><br><b>Desvios:</b> Sem necessidade de desvio.');
+    } else if(tp || ts){
+      lines.push('<br><br><b>Desvios:</b>');
+      if(tp) lines.push('<br><u>Sentido TP:</u> '+tp);
+      if(ts) lines.push('<br><u>Sentido TS:</u> '+ts);
+    }
+    const relato = esc(fillTokens(v('in_relato'))); if(!relato) miss.push('relato');
+    lines.push(L('RELATO', relato));
+    lines.push(respLine());
+    lines.push(opLine('in'));
+    lines.push(L('OBS', esc(v('in_obs'))));
+    lines.push(L('ATUALIZAÇÃO', esc(v('in_atual'))));
+    const lib = esc(v('in_liberada'));
+    if(lib) lines.push(L('DESFECHO', 'Via liberada às '+lib+'. Os coletivos voltaram a cumprir o itinerário normal.'));
+    return { html: lines.filter(Boolean).join('\n'), miss };
+  }
+
+  // ---------- ATENDE ----------
+  const AT_MOT = {
+    transmissao:{ m:'VAN SEM TRANSMISSÃO, POIS ESTAVA SEM PARTIDA E COM ISSO PERDEU A TRANSMISSÃO. POR ESTE FATO NÃO FOI ENVIADO O ALERTA!',
+      r:'Ressalto que a falta de transmissão da van não interfere na operação! A mesma continua prestando o atendimento operacional conforme a ORO.' },
+    avl:{ m:'VAN COM PROBLEMAS NO ACIONAMENTO DO AVL. POR ESTE FATO NÃO FOI ENVIADO O ALERTA!',
+      r:'Ressalto que o defeito apresentado no AVL da van não interfere na operação! A mesma continua prestando o atendimento operacional conforme a ORO.' }
+  };
+  function renderAt(){
+    const t = v('at_tipo');
+    document.querySelectorAll('#f_atende [data-at]').forEach(el => el.hidden = el.dataset.at !== t);
+  }
+  $('at_tipo').addEventListener('change', renderAt);
+  function genAtende(){
+    const t = v('at_tipo'), miss = [], van = v('at_van');
+    if(!van) miss.push('van');
+    const L2 = (l, x) => x ? l + ': ' + x : '';
+    let subject, lines;
+    if(t === 'rendicao'){
+      const mk = v('at_motivo'); let m, r;
+      if(mk === '__outro'){
+        const o = v('at_motivo_outro'); if(!o) miss.push('motivo');
+        m = o ? o.toUpperCase().replace(/[.!\s]*$/, '') + '. POR ESTE FATO NÃO FOI ENVIADO O ALERTA!' : '';
+        r = 'Ressalto que o problema apresentado não interfere na operação! A mesma continua prestando o atendimento operacional conforme a ORO.';
+      } else { m = AT_MOT[mk].m; r = AT_MOT[mk].r; }
+      const normal = $('at_normal').checked;
+      if(m && normal) m += ' (A VAN SEGUE EM OPERAÇÃO NORMAL)';
+      if(!v('at_rendicao')) miss.push('horário da rendição');
+      subject = 'IMPOSSIBILIDADE DE ACIONAMENTO DE RENDIÇÃO' + (van ? ' ' + van : '');
+      lines = [L2('DATA', fd(v('at_data'))), L2('VAN', van), L2('MOTIVO', m),
+        L2('INÍCIO DE OPERAÇÃO', v('at_inicio')), L2('RENDIÇÃO', v('at_rendicao')), normal ? r : ''];
+    } else {
+      const def = esc(v('at_defeito')); if(!def) miss.push('defeito');
+      const vanE = esc(van);
+      const h = [header('VAN EM S.O.S'),
+        L('VAN', vanE ? font('RED', '<b>' + vanE + '</b>') : ''),
+        L('DATA', font('BLUE', fd(v('at_data')))),
+        L('HORA', font('BLUE', esc(v('at_hora')))),
+        L('LOCAL', font('BLUE', esc(v('at_local')))),
+        L('DEFEITO', def),
+        L('SITUAÇÃO', esc(pick('at_situacao')))];
+      const des = esc(pick('at_desfecho'));
+      if(des) h.push(L('Desfecho', des));
+      return { html: h.filter(Boolean).join('\n'), miss };
+    }
+    return { text: lines.filter(Boolean).join('\n'), subject, miss };
+  }
+
+  // ---------- ÚLTIMO ALERTA (para Encaminhamentos) ----------
+  let lastAlert = null, pulledAlert = null;
+  function hoje(){ const n = new Date(); return n.getFullYear()+'-'+pad(n.getMonth()+1)+'-'+pad(n.getDate()); }
+  function captureAlert(){
+    let a = null;
+    if(cat === 'sos') a = { cat:'Quebra', det:defeitos(), col:v('sos_coletivo'), linha:v('sos_linha'), local:v('sos_local'), data:hoje() };
+    else if(cat === 'acid') a = { cat:'Acidente', det:$('ac_tipo').selectedOptions[0].text, col: v('ac_tipo') === 'via' ? v('ac_pref') : v('ac_coletivo'), linha:v('ac_linha'), local:v('ac_local'), data:v('ac_data') };
+    else if(cat === 'interf'){
+      const m = $('in_motivo');
+      const det = m.value === '__outro' ? v('in_motivo_outro') : (m.value ? m.selectedOptions[0].text : '');
+      a = { cat:'Interferência na via', det, col:v('in_pref'), linha:v('in_linhas'), local:v('in_local'), data:v('in_data') };
+    }
+    else if(cat === 'atende'){
+      const sos = v('at_tipo') === 'sos';
+      a = { cat:'Atende', det: sos ? 'Van em S.O.S' + (v('at_defeito') ? ' – ' + v('at_defeito') : '') : 'Impossibilidade de acionamento de rendição',
+            col:v('at_van'), linha:'', local: sos ? v('at_local') : '', data:v('at_data') };
+    }
+    if(a) lastAlert = a;
+  }
+
+  // ---------- ENCAMINHAMENTOS ----------
+  function fillEnc(){
+    if(!lastAlert) return toast('Gere um alerta primeiro');
+    const a = lastAlert;
+    $('enc_cat').value = a.cat; $('enc_det').value = a.det || ''; $('enc_col').value = a.col || '';
+    $('enc_linha').value = a.linha || ''; $('enc_local').value = a.local || '';
+    if(a.data) $('enc_data').value = a.data;
+    pulledAlert = a;
+    toast('Dados do último alerta puxados');
+    $('enc_num').focus();
+  }
+  $('enc_pull').addEventListener('click', fillEnc);
+  function genEnc(){
+    const miss = []; const num = v('enc_num'); if(!num) miss.push('nº da ocorrência');
+    const det = v('enc_det');
+    const L3 = (l, x) => x ? '*' + l + ':* ' + x : '';
+    const body = [L3('Ocorrência nº', num), L3('Data', fd(v('enc_data'))), L3('Tipo', v('enc_cat') + (det ? ' – ' + det : '')),
+      L3('Coletivo', v('enc_col')), L3('Linha', v('enc_linha')), L3('Local', v('enc_local'))].filter(Boolean);
+    return { text: '*' + v('cfg_header') + '*\n*Encaminhamento de ocorrência*\n\n' + body.join('\n'), miss, wa:true };
+  }
+  let encBlob = null;
+  function setImg(file){
+    if(!file || !file.type || !file.type.startsWith('image/')) return;
+    encBlob = file;
+    const fr = new FileReader();
+    fr.onload = () => { $('enc_img').src = fr.result; $('enc_img').hidden = false; $('enc_img_actions').hidden = false; $('enc_drop').hidden = true; };
+    fr.readAsDataURL(file);
+  }
+  function clearImg(){
+    encBlob = null; $('enc_img').removeAttribute('src'); $('enc_img').hidden = true;
+    $('enc_img_actions').hidden = true; $('enc_drop').hidden = false; $('enc_file').value = '';
+  }
+  document.addEventListener('paste', e => {
+    if(cat !== 'enc' || !e.clipboardData) return;
+    const it = Array.from(e.clipboardData.items).find(i => i.type.startsWith('image/'));
+    if(it){ e.preventDefault(); setImg(it.getAsFile()); toast('Print colado'); }
+  });
+  $('enc_drop').addEventListener('click', () => $('enc_file').click());
+  $('enc_drop').addEventListener('dragover', e => e.preventDefault());
+  $('enc_drop').addEventListener('drop', e => { e.preventDefault(); setImg(e.dataTransfer.files[0]); });
+  $('enc_file').addEventListener('change', e => setImg(e.target.files[0]));
+  $('enc_img_del').addEventListener('click', clearImg);
+  $('enc_img_copy').addEventListener('click', async () => {
+    try{
+      let blob = encBlob;
+      if(blob.type !== 'image/png'){
+        blob = await new Promise(res => {
+          const c = document.createElement('canvas'), im = $('enc_img');
+          c.width = im.naturalWidth; c.height = im.naturalHeight;
+          c.getContext('2d').drawImage(im, 0, 0); c.toBlob(res, 'image/png');
+        });
+      }
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+      toast('Print copiado');
+    }catch(err){ toast('Clique com o botão direito no print > Copiar imagem'); }
+  });
+
+  // ---------- MENSAGENS E LEMBRETES ----------
+  const waUrl = t => 'https://api.whatsapp.com/send?text=' + encodeURIComponent(t);
+  const MSG_DEF = [
+    { t:'Lembrete aos fiscais', x:'Boa noite, fiscais! Lembrando de manter o CCO informado sobre a situação operacional das linhas e de reportar imediatamente qualquer ocorrência (S.O.S, acidentes ou interferências na via).' },
+    { t:'Confirmação de posição', x:'Fiscais, favor confirmar suas posições e informar se há alguma anormalidade nas linhas neste momento.' },
+    { t:'Atenção a alagamentos', x:'Atenção, fiscais! Pedimos atenção aos pontos de alagamento nas vias do itinerário. Ao identificar qualquer ponto alagado, notifiquem o CCO imediatamente, informando o local e as linhas afetadas.\nReforcem também junto aos motoristas a orientação de atenção redobrada: reduzir a velocidade, manter distância segura e não atravessar trechos alagados sem antes avaliar as condições da via e comunicar o CCO.' }
+  ];
+  let msgs = null;
+  try{ msgs = JSON.parse(load('cco_msgs')); }catch(e){}
+  if(!Array.isArray(msgs) || !msgs.length) msgs = MSG_DEF.map(m => ({ t:m.t, x:m.x }));
+  else if(load('cco_msgs_ver') !== '2'){
+    MSG_DEF.forEach(d => { if(!msgs.some(m => m.t === d.t)) msgs.push({ t:d.t, x:d.x }); });
+    save('cco_msgs', JSON.stringify(msgs));
+  }
+  save('cco_msgs_ver', '2');
+  function saveMsgs(){ save('cco_msgs', JSON.stringify(msgs)); }
+  let lbCfg = { inicio:'22:00', int:'2, 2, 3', msg:0 };
+  try{ Object.assign(lbCfg, JSON.parse(load('cco_lb')) || {}); }catch(e){}
+  $('lb_inicio').value = lbCfg.inicio; $('lb_int').value = lbCfg.int;
+  function saveLb(){ lbCfg = { inicio:v('lb_inicio'), int:v('lb_int'), msg:+$('lb_msg').value || 0 }; save('cco_lb', JSON.stringify(lbCfg)); }
+  function renderLbMsg(){
+    const s = $('lb_msg'); const cur = Math.min(lbCfg.msg, msgs.length - 1);
+    s.innerHTML = '';
+    msgs.forEach((m, i) => { const o = document.createElement('option'); o.value = i; o.textContent = m.t || ('Mensagem ' + (i + 1)); s.appendChild(o); });
+    s.value = cur;
+  }
+  function renderMsgs(){
+    const box = $('msg_list'); box.innerHTML = '';
+    msgs.forEach((m, i) => {
+      const d = document.createElement('div'); d.className = 'msgcard';
+      d.innerHTML = '<input class="msg-tit" aria-label="Título da mensagem"><textarea class="msg-txt" aria-label="Texto da mensagem"></textarea>' +
+        '<div class="actions"><button type="button" class="btn primary" data-act="copy">Copiar</button>' +
+        '<a class="btn" data-act="wa" target="_blank" rel="noopener">WhatsApp</a>' +
+        '<button type="button" class="btn" data-act="del">Remover</button></div>';
+      const ti = d.querySelector('.msg-tit'), tx = d.querySelector('.msg-txt'), wa = d.querySelector('[data-act="wa"]');
+      ti.value = m.t; tx.value = m.x; wa.href = waUrl(m.x);
+      ti.addEventListener('input', () => { m.t = ti.value; saveMsgs(); renderLbMsg(); });
+      tx.addEventListener('input', () => { m.x = tx.value; wa.href = waUrl(m.x); saveMsgs(); });
+      d.querySelector('[data-act="copy"]').addEventListener('click', async () => toast(await copyText(m.x) ? 'Mensagem copiada' : 'Selecione e copie com Ctrl+C'));
+      d.querySelector('[data-act="del"]').addEventListener('click', () => {
+        if(msgs.length <= 1) return toast('Mantenha ao menos uma mensagem');
+        msgs.splice(i, 1); saveMsgs(); renderMsgs(); toast('Mensagem removida');
+      });
+      box.appendChild(d);
+    });
+    renderLbMsg();
+  }
+  $('msg_add').addEventListener('click', () => {
+    msgs.push({ t:'Nova mensagem', x:'' }); saveMsgs(); renderMsgs();
+    const all = document.querySelectorAll('#msg_list .msg-txt'); all[all.length - 1].focus();
+  });
+
+  let sched = [], fired = [], lbTimer = null, audioCtx = null, titleTimer = null;
+  const baseTitle = document.title;
+  const hhmm = t => { const d = new Date(t); return pad(d.getHours()) + ':' + pad(d.getMinutes()); };
+  function parseInts(){ return v('lb_int').split(/[;,\s]+/).map(x => parseFloat(x)).filter(x => x > 0); }
+  function buildSched(){
+    const p = (v('lb_inicio') || '22:00').split(':').map(Number);
+    const now = new Date(), s = new Date(now); s.setHours(p[0], p[1] || 0, 0, 0);
+    if(s - now > 6 * 3600e3) s.setDate(s.getDate() - 1);
+    let acc = s.getTime();
+    return parseInts().map(h => (acc += h * 3600e3));
+  }
+  function renderSched(){
+    const list = lbTimer ? sched : buildSched(), now = Date.now(), box = $('lb_sched');
+    box.innerHTML = '';
+    if(!list.length){ box.textContent = 'Informe os intervalos em horas, separados por vírgula.'; return; }
+    let marked = false;
+    list.forEach((t, i) => {
+      const s = document.createElement('span'); s.textContent = hhmm(t);
+      if(lbTimer ? fired[i] : t <= now) s.className = 'done';
+      else if(!marked){ s.className = 'next'; s.textContent += ' (próximo)'; marked = true; }
+      box.appendChild(s);
+    });
+  }
+  ['lb_inicio','lb_int'].forEach(id => $(id).addEventListener('input', () => { saveLb(); if(!lbTimer) renderSched(); }));
+  $('lb_msg').addEventListener('change', saveLb);
+  function audio(){ try{ audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)(); audioCtx.resume(); }catch(e){} }
+  function beep(){
+    try{
+      audio();
+      [0, 0.35, 0.7].forEach(d => {
+        const o = audioCtx.createOscillator(), g = audioCtx.createGain(), t0 = audioCtx.currentTime + d;
+        o.frequency.value = 880; o.connect(g); g.connect(audioCtx.destination);
+        g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(0.3, t0 + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.25);
+        o.start(t0); o.stop(t0 + 0.3);
+      });
+    }catch(e){}
+  }
+  function showLembrete(t){
+    const m = msgs[+$('lb_msg').value] || msgs[0];
+    $('lb_title').textContent = 'Lembrete das ' + hhmm(t) + ' – ' + (m.t || 'Mensagem');
+    $('lb_text').textContent = m.x; $('lb_wa').href = waUrl(m.x);
+    $('lembrete').hidden = false; beep();
+    clearInterval(titleTimer); let on = false;
+    titleTimer = setInterval(() => { document.title = (on = !on) ? '🔔 LEMBRETE – CCO' : baseTitle; }, 1000);
+    try{ if('Notification' in window && Notification.permission === 'granted') new Notification('Lembrete aos fiscais – CCO', { body:m.x }); }catch(e){}
+  }
+  $('lb_close').addEventListener('click', () => { $('lembrete').hidden = true; clearInterval(titleTimer); document.title = baseTitle; });
+  $('lb_copy').addEventListener('click', async () => toast(await copyText($('lb_text').textContent) ? 'Mensagem copiada' : 'Selecione e copie com Ctrl+C'));
+  function stopLb(){ clearInterval(lbTimer); lbTimer = null; $('lb_toggle').textContent = 'Ativar lembretes'; renderSched(); }
+  function tick(){
+    const now = Date.now();
+    sched.forEach((t, i) => { if(!fired[i] && now >= t){ fired[i] = true; showLembrete(t); } });
+    renderSched();
+    if(fired.every(Boolean)){ stopLb(); toast('Lembretes do turno concluídos'); }
+  }
+  $('lb_toggle').addEventListener('click', () => {
+    if(lbTimer){ stopLb(); return toast('Lembretes desativados'); }
+    sched = buildSched(); if(!sched.length) return toast('Informe os intervalos');
+    const now = Date.now(); fired = sched.map(t => t <= now);
+    if(fired.every(Boolean)) return toast('Todos os horários deste turno já passaram');
+    audio();
+    try{ if('Notification' in window && Notification.permission === 'default') Notification.requestPermission(); }catch(e){}
+    lbTimer = setInterval(tick, 15000);
+    $('lb_toggle').textContent = 'Desativar lembretes';
+    renderSched(); toast('Lembretes ativados');
+  });
+  $('lb_test').addEventListener('click', () => { audio(); showLembrete(Date.now()); });
+  renderMsgs(); renderSched();
+
+  // ---------- prefixo, operacional e responsável pela obra ----------
+  ['sos','ac','in'].forEach(p => $(p + '_op').addEventListener('change', e => $(p + '_op_box').hidden = !e.target.checked));
+  const prefLine = p => L('PREFIXO QUE ACIONOU', esc(v(p + '_pref')));
+  function opLine(p){
+    if(!$(p + '_op').checked) return '';
+    const n = esc(v(p + '_op_nome'));
+    return L('OPERACIONAL', (p === 'in' ? 'Encaminhado à interferência' : 'Encaminhado ao local') + (n ? ' – ' + n : '') + '.');
+  }
+  $('in_motivo').addEventListener('change', () => { $('in_resp_box').hidden = !['obra','recapeamento'].includes(v('in_motivo')); });
+  function respLine(){
+    if($('in_resp_box').hidden) return '';
+    const n = esc(v('in_resp_nome')), e = esc(v('in_resp_emp'));
+    if(!n && !e) return '';
+    return L('RESPONSÁVEL PELA OBRA', n ? n + (e ? ', empresa ' + e : '') : 'Empresa ' + e);
+  }
+
+  // ---------- gerar, copiar, limpar ----------
+  async function copyText(text){
+    try{ await navigator.clipboard.writeText(text); return true; }
+    catch(e){
+      const ta = document.createElement('textarea'); ta.value = text;
+      ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select();
+      let ok = false; try{ ok = document.execCommand('copy'); }catch(_){}
+      ta.remove(); return ok;
+    }
+  }
+  let toastTimer;
+  function toast(msg){
+    const t = $('toast'); t.textContent = msg; t.classList.add('show');
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 1600);
+  }
+  async function generate(override){
+    if(cat === 'msgs') return;
+    const manual = !!(override && (override.html !== undefined || override.text !== undefined));
+    const r = manual ? override : (cat === 'sos' ? genSOS() : cat === 'acid' ? genAcid() : cat === 'interf' ? genInterf() : cat === 'enc' ? genEnc() : genAtende());
+    if(cat !== 'enc' && !manual) captureAlert();
+    const isTxt = r.text !== undefined;
+    const out = isTxt ? r.text : r.html;
+    $('code').value = out;
+    $('preview').classList.toggle('texto', isTxt);
+    $('preview').innerHTML = isTxt ? r.text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') : r.html;
+    $('subj_row').hidden = !(isTxt && r.subject);
+    $('subj').value = (isTxt && r.subject) ? r.subject : '';
+    $('btn_copy').textContent = r.wa ? 'Copiar mensagem' : isTxt ? 'Copiar corpo do e-mail' : 'Copiar HTML';
+    document.querySelector('.out h2').textContent = r.wa ? 'Prévia da mensagem' : isTxt ? 'Prévia do e-mail' : 'Prévia do alerta';
+    $('wa_link').hidden = !r.wa;
+    if(r.wa) $('wa_link').href = waUrl(out);
+    const w = $('warn');
+    if(r.miss.length){ w.hidden = false; w.textContent = 'Confira: '+r.miss.join(', ')+'.'; }
+    else w.hidden = true;
+    const ok = await copyText(out);
+    toast(ok ? 'HTML copiado' : 'Selecione o HTML e copie com Ctrl+C');
+  }
+  $('btn_subj').addEventListener('click', async () => {
+    const s = $('subj').value; if(!s) return;
+    try{ await navigator.clipboard.writeText(s); toast('Assunto copiado'); }
+    catch(e){ $('subj').select(); try{ document.execCommand('copy'); toast('Assunto copiado'); }catch(_){ toast('Selecione e copie com Ctrl+C'); } }
+  });
+  $('btn_gen').addEventListener('click', generate);
+  $('bar_gen').addEventListener('click', generate);
+  $('btn_copy').addEventListener('click', async () => {
+    if(!$('code').value) return toast('Gere o alerta primeiro');
+    toast(await copyText($('code').value) ? 'HTML copiado' : 'Selecione o HTML e copie com Ctrl+C');
+  });
+  document.addEventListener('keydown', e => {
+    if((e.ctrlKey || e.metaKey) && e.key === 'Enter'){ e.preventDefault(); generate(); }
+    if(e.key === 'Escape') closeMenu();
+    if(e.altKey && /^[1-6]$/.test(e.key)){ e.preventDefault(); document.querySelectorAll('.tab')[+e.key - 1].click(); }
+  });
+  $('btn_clear').addEventListener('click', () => {
+    const f = $('f_'+cat);
+    const keepNome = $('ac_acomp_nome').value;
+    f.reset();
+    f.querySelectorAll('.invalid').forEach(x => { x.classList.remove('invalid'); x.title = ''; });
+    f.querySelectorAll('[id$="_op_box"], #in_resp_box').forEach(x => x.hidden = true);
+    $('ac_acomp_nome').value = keepNome;
+    f.querySelectorAll('.outro').forEach(o => o.hidden = true);
+    if(cat === 'acid'){ $('ac_socorro_box').hidden = true; $('org_list').innerHTML = ''; $('bo_box').hidden = true; renderAcid(); }
+    if(cat === 'interf'){ $('in_termino').disabled = true; $('in_sem_box').hidden = true; $('in_desvios_box').hidden = false; }
+    if(cat === 'atende') renderAt();
+    if(cat === 'enc'){ clearImg(); pulledAlert = lastAlert; }
+    $('wa_link').hidden = true;
+    $('subj_row').hidden = true; $('subj').value = '';
+    updDD(); $('sos_dd').open = false;
+    setNow();
+    $('code').value = ''; $('warn').hidden = true;
+    $('preview').innerHTML = '<span class="empty">Preencha os campos e aperte Gerar e copiar.</span>';
+  });
+})();
+</script>
+</body>
+</html>

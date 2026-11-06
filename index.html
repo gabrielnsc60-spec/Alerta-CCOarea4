@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gerador de Alertas CCO</title>
+<meta name="description" content="Ferramenta web que padroniza e acelera a emissão de alertas operacionais em um Centro de Controle Operacional de transporte coletivo.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EDF0F3; --surface:#FFFFFF; --ink:#17202A; --muted:#5A6573; --line:#D2D9E1;
+  --sos:#D99A06; --acid:#C8322A; --interf:#1F5FBF; --atende:#7A3FB8; --msgs:#0F7F8C; --enc:#2F8A3B;
+  --accent:#C8322A; color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#10151B; --surface:#18202A; --ink:#E5EAEF; --muted:#98A4B1; --line:#2C3743;
+    --sos:#F0B429; --acid:#E5574E; --interf:#4A8BE8; --atende:#A77BE0; --msgs:#3BB8C6; --enc:#5DC26A;
+    --accent:#E5574E; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#10151B; --surface:#18202A; --ink:#E5EAEF; --muted:#98A4B1; --line:#2C3743;
+  --sos:#F0B429; --acid:#E5574E; --interf:#4A8BE8; --atende:#A77BE0; --msgs:#3BB8C6; --enc:#5DC26A;
+  --accent:#E5574E; color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box;}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Barlow",system-ui,sans-serif;font-size:17px;line-height:1.55;}
+.wrap{max-width:1080px;margin:0 auto;padding:0 20px;}
+h1,h2,h3{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:700;line-height:1.05;margin:0;}
+a{color:inherit;}
+.stripe{display:flex;height:8px;}
+.stripe span{flex:1;}
+header.hero{padding:64px 0 48px;}
+.eyebrow{font-weight:600;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;font-size:.8rem;}
+.hero h1{font-size:clamp(2.6rem,7vw,4.4rem);margin:10px 0 16px;}
+.hero p.lead{font-size:1.2rem;color:var(--muted);max-width:640px;margin:0 0 28px;}
+.cta{display:flex;flex-wrap:wrap;gap:10px;}
+.btn{display:inline-block;text-decoration:none;font-weight:600;border-radius:6px;padding:12px 20px;border:1px solid var(--line);background:var(--surface);}
+.btn.primary{background:var(--ink);color:var(--bg);border-color:var(--ink);}
+.tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:28px;}
+.tags span{border:1px solid var(--line);border-radius:999px;padding:3px 12px;font-size:.85rem;color:var(--muted);}
+.shot{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface);box-shadow:0 12px 40px rgba(0,0,0,.08);}
+.shot img{display:block;width:100%;height:auto;}
+section{padding:56px 0;border-top:1px solid var(--line);}
+section h2{font-size:2.2rem;margin-bottom:18px;}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:28px;}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:20px;}
+.card h3{font-size:1.4rem;margin-bottom:6px;}
+.card p{margin:0;color:var(--muted);}
+.feats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+.feat{background:var(--surface);border:1px solid var(--line);border-left:8px solid var(--c);border-radius:6px;padding:16px 18px;}
+.feat h3{font-size:1.35rem;margin-bottom:4px;}
+.feat p{margin:0;color:var(--muted);font-size:.95rem;}
+.gallery{display:grid;gap:28px;}
+.gallery figure{margin:0;}
+.gallery figcaption{color:var(--muted);font-size:.95rem;margin-top:10px;}
+.gallery .row{display:grid;grid-template-columns:2.4fr 1fr;gap:20px;align-items:start;}
+ul.list{margin:0;padding-left:20px;}
+ul.list li{margin-bottom:8px;}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:8px;}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px;}
+.stat b{display:block;font-family:"Barlow Condensed",sans-serif;font-size:2.2rem;line-height:1;}
+.stat span{color:var(--muted);font-size:.9rem;}
+footer{padding:36px 0 56px;border-top:1px solid var(--line);color:var(--muted);font-size:.95rem;}
+@media (max-width:820px){
+  .two,.gallery .row{grid-template-columns:1fr;}
+  .feats{grid-template-columns:1fr 1fr;}
+  .stats{grid-template-columns:1fr 1fr;}
+  header.hero{padding:40px 0 32px;}
+}
+@media (max-width:520px){ .feats{grid-template-columns:1fr;} }
+</style>
+</head>
+<body>
+<div class="stripe" aria-hidden="true"><span style="background:var(--sos)"></span><span style="background:var(--acid)"></span><span style="background:var(--interf)"></span><span style="background:var(--atende)"></span><span style="background:var(--msgs)"></span><span style="background:var(--enc)"></span></div>
+
+<div class="wrap">
+  <header class="hero">
+    <div class="eyebrow">Projeto · Ferramenta interna de operação</div>
+    <h1>Gerador de Alertas CCO</h1>
+    <p class="lead">Uma ferramenta web que transforma o registro de ocorrências do Centro de Controle Operacional em poucos cliques: o operador preenche um formulário guiado e recebe o alerta já formatado, padronizado e copiado.</p>
+    <div class="cta">
+      <a class="btn primary" href="app/">Abrir a ferramenta</a>
+      <a class="btn" href="#problema">Ver o caso</a>
+    </div>
+    <div class="tags"><span>HTML</span><span>CSS</span><span>JavaScript puro</span><span>Sem dependências</span><span>Funciona offline</span><span>Modo escuro</span></div>
+  </header>
+
+  <div class="shot"><img src="assets/telas/sos.png" alt="Tela do gerador na seção S.O.S, com o formulário à esquerda e a prévia do alerta à direita" width="2560" height="1800"></div>
+</div>
+
+<div class="wrap">
+  <section id="problema">
+    <h2>O problema e a solução</h2>
+    <div class="two">
+      <div class="card">
+        <h3>Antes</h3>
+        <p>Cada alerta (quebra de coletivo, acidente, interdição de via) era escrito à mão, durante o turno e sob pressão. O texto mudava de operador para operador, faltavam campos importantes e era preciso reformatar a mesma informação para o e-mail, o sistema e o WhatsApp.</p>
+      </div>
+      <div class="card">
+        <h3>Depois</h3>
+        <p>Um formulário por tipo de ocorrência, com textos prontos, máscaras e validações. O alerta sai no padrão da empresa, com cabeçalho, negritos e campos na ordem certa, e vai direto para a área de transferência. Campos opcionais vazios simplesmente não aparecem.</p>
+      </div>
+    </div>
+    <div class="stats">
+      <div class="stat"><b>6</b><span>tipos de comunicação</span></div>
+      <div class="stat"><b>1</b><span>arquivo, sem instalação</span></div>
+      <div class="stat"><b>0</b><span>bibliotecas externas</span></div>
+      <div class="stat"><b>Ctrl+Enter</b><span>gera e copia</span></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Funcionalidades</h2>
+    <div class="feats">
+      <div class="feat" style="--c:var(--sos)"><h3>S.O.S</h3><p>Defeitos com seleção múltipla, situação, operacional enviado, desfecho e retificação de alerta anterior.</p></div>
+      <div class="feat" style="--c:var(--acid)"><h3>Acidente</h3><p>Colisão, queda, mal súbito ou acidente entre terceiros. Órgãos no local, B.O e complemento de B.O.</p></div>
+      <div class="feat" style="--c:var(--interf)"><h3>Interferência na via</h3><p>Motivos com relato automático, desvios por sentido, responsável pela obra e horário de liberação.</p></div>
+      <div class="feat" style="--c:var(--atende)"><h3>Atende</h3><p>E-mails das vans de atendimento especial, com assunto pronto para copiar.</p></div>
+      <div class="feat" style="--c:var(--msgs)"><h3>Mensagens</h3><p>Mensagens editáveis aos fiscais e lembretes programados no turno, com bipe e notificação.</p></div>
+      <div class="feat" style="--c:var(--enc)"><h3>Encaminhamentos</h3><p>Resumo para o WhatsApp que reaproveita os dados do último alerta e aceita colar o print.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Telas</h2>
+    <div class="gallery">
+      <figure class="shot"><img src="assets/telas/acidente.png" alt="Seção Acidente com relato preenchido por texto pronto e a prévia do alerta" loading="lazy" width="2560" height="1800"></figure>
+      <figure><figcaption>Acidente: os botões de texto pronto preenchem o relato e já trocam [VIA] e [HORA] pelos dados digitados.</figcaption></figure>
+      <figure class="shot"><img src="assets/telas/interferencia.png" alt="Seção Interferência na via com desvios e relato automático" loading="lazy" width="2560" height="1800"></figure>
+      <figure><figcaption>Interferência na via: escolher o motivo escreve o relato; desvios separados por sentido.</figcaption></figure>
+      <div class="row">
+        <figure class="shot"><img src="assets/telas/mensagens.png" alt="Seção Mensagens com lembretes do turno" loading="lazy" width="2560" height="1800"></figure>
+        <figure class="shot"><img src="assets/telas/celular.png" alt="Ferramenta no celular, em modo escuro" loading="lazy" width="780" height="1688"></figure>
+      </div>
+      <figure><figcaption>Lembretes do turno e versão para celular em modo escuro.</figcaption></figure>
+    </div>
+  </section>
+
+  <section>
+    <h2>Decisões técnicas</h2>
+    <div class="two">
+      <ul class="list">
+        <li><b>Um único arquivo HTML.</b> Abre com duplo clique em qualquer computador da operação, sem servidor, instalação ou permissão de TI.</li>
+        <li><b>JavaScript puro.</b> Nada para atualizar ou quebrar; carrega instantaneamente.</li>
+        <li><b>Saída em HTML.</b> O alerta é colado no sistema já com negrito, sublinhado e centralização.</li>
+        <li><b>Preferências no navegador.</b> Cabeçalho, nome do operador, mensagens e lembretes ficam salvos via localStorage.</li>
+      </ul>
+      <ul class="list">
+        <li><b>Validações que ajudam.</b> Máscara e verificação de CPF, placa em maiúsculas, aviso de campos obrigatórios faltando.</li>
+        <li><b>Textos com marcadores.</b> Modelos com [VIA] e [HORA] que se atualizam quando o local ou a hora mudam.</li>
+        <li><b>Feito para o turno.</b> Atalhos de teclado, cores por tipo de ocorrência, modo escuro e layout responsivo.</li>
+        <li><b>Acessível.</b> Navegação por teclado, foco visível e prévia anunciada para leitores de tela.</li>
+      </ul>
+    </div>
+  </section>
+</div>
+
+<footer>
+  <div class="wrap">Projeto desenvolvido para uso em um CCO de transporte coletivo. Os dados mostrados nas telas são fictícios. · <a href="app/">Abrir a ferramenta</a></div>
+</footer>
+</body>
+</html>
