@@ -3,10 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:">
 <title>Gerador de alertas – CCO Área 4</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
 <style>
 :root{
   --bg:#EDF0F3; --surface:#FFFFFF; --ink:#17202A; --muted:#5A6573; --line:#D2D9E1; --field:#F7F9FB;
@@ -29,7 +27,7 @@
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);}
 html{scroll-padding-top:env(safe-area-inset-top,0px);}
 *,*::before,*::after{box-sizing:inherit;}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:"Barlow",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:16px;line-height:1.45;}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Barlow","Segoe UI",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:16px;line-height:1.45;}
 body[data-cat="sos"]{--accent:var(--sos);}
 body[data-cat="acid"]{--accent:var(--acid);}
 body[data-cat="interf"]{--accent:var(--interf);}
@@ -64,7 +62,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .ham[aria-expanded="true"] span:nth-child(2){opacity:0;}
 .ham[aria-expanded="true"] span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
 .bar-title{flex:1;min-width:0;}
-.bar-name{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:700;font-size:1.5rem;line-height:1.05;color:var(--accent);
+.bar-name{font-family:"Barlow Condensed","Bahnschrift SemiCondensed","Arial Narrow",sans-serif;font-weight:700;font-size:1.5rem;line-height:1.05;color:var(--accent);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .bar-sub{font-size:.82rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 body[data-cat="msgs"] .bar-gen{display:none;}
@@ -78,7 +76,7 @@ body[data-cat="msgs"] .bar-gen{display:none;}
 .drawer .tabs{grid-template-columns:1fr;margin:0;}
 .drawer .hdrcfg{min-width:0;}
 header.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:18px;}
-h1{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:700;font-size:2rem;line-height:1;margin:0;letter-spacing:.01em;}
+h1{font-family:"Barlow Condensed","Bahnschrift SemiCondensed","Arial Narrow",sans-serif;font-weight:700;font-size:2rem;line-height:1;margin:0;letter-spacing:.01em;}
 .sub{color:var(--muted);font-size:.95rem;margin-top:4px;}
 .hdrcfg{display:flex;flex-direction:column;gap:4px;min-width:240px;}
 .hdrcfg label{font-size:.85rem;color:var(--muted);}
@@ -87,7 +85,7 @@ h1{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:700;font
 .tabs{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:18px;}
 @media (max-width:1100px){.tabs{grid-template-columns:repeat(3,1fr);}}
 .tab{appearance:none;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;
-  font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:700;font-size:1.2rem;text-align:left;
+  font-family:"Barlow Condensed","Bahnschrift SemiCondensed","Arial Narrow",sans-serif;font-weight:700;font-size:1.2rem;text-align:left;
   padding:14px 16px 14px 22px;border-radius:6px;position:relative;overflow:hidden;}
 .tab::before{content:"";position:absolute;left:0;top:0;bottom:0;width:8px;background:var(--c);}
 .tab small{display:block;font-family:"Barlow",sans-serif;font-weight:500;font-size:.85rem;color:var(--muted);}
@@ -103,6 +101,32 @@ form[hidden]{display:none;}
 [hidden]{display:none !important;}
 .multi{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:0 12px;border:1px solid var(--line);border-radius:4px;background:var(--field);padding:6px 10px;}
 .multi .check{margin:5px 0;font-weight:400;}
+.user-chip{padding:8px 12px;font-size:.88rem;white-space:nowrap;max-width:200px;overflow:hidden;text-overflow:ellipsis;}
+.auth{position:fixed;inset:0;z-index:60;background:rgba(8,12,16,.6);display:grid;place-items:center;padding:16px;}
+.auth-card{background:var(--surface);color:var(--ink);border-radius:10px;border-top:6px solid var(--accent);padding:22px;width:min(420px,100%);
+  max-height:calc(100% - 16px);overflow:auto;box-shadow:0 20px 50px rgba(0,0,0,.35);}
+.auth-card h1{font-size:1.8rem;margin:0 0 12px;}
+.auth-tabs{display:flex;gap:8px;margin-bottom:14px;}
+.chip.on{background:var(--accent);color:var(--on-accent);border-color:var(--accent);}
+.auth-store{font-size:.85rem;color:var(--muted);display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
+@media (max-width:600px){.user-chip{max-width:110px;}}
+.pn-opts{display:flex;gap:28px;}
+.pn-opts .check{margin:4px 0;}
+.req{color:var(--acid);font-weight:600;font-size:.8rem;margin-left:4px;}
+.pn.erro{outline:2px solid var(--acid);outline-offset:6px;border-radius:4px;}
+.hist{margin-bottom:14px;}
+.tags{display:flex;flex-wrap:wrap;align-items:center;gap:6px;border:1px solid var(--line);border-radius:4px;background:var(--field);padding:6px;}
+.tags:focus-within{outline:3px solid var(--accent);outline-offset:2px;}
+.tag-list{display:contents;}
+.tag{display:inline-flex;align-items:center;gap:2px;background:var(--accent);color:var(--on-accent);border-radius:999px;padding:3px 4px 3px 10px;font-weight:600;font-size:.9rem;}
+.tag-x{appearance:none;border:0;background:transparent;color:inherit;font-size:1.05rem;line-height:1;cursor:pointer;padding:0 5px;}
+.tags .tag-in{flex:1;min-width:110px;border:0;background:transparent;padding:4px;}
+.tags .tag-in:focus-visible{outline:none;}
+.tags .tag-btn{padding:5px 10px;font-size:.85rem;}
+.hist-body{border:1px solid var(--accent);border-top:0;border-radius:0 0 4px 4px;background:var(--field);padding:10px;max-height:380px;overflow-y:auto;}
+.hitem{border:1px solid var(--line);border-radius:6px;padding:8px 10px;margin-bottom:8px;background:var(--surface);}
+.hsub{font-size:.85rem;color:var(--muted);}
+.hitem .actions .btn{padding:6px 12px;font-size:.88rem;}
 .org{border:1px solid var(--line);border-radius:6px;padding:10px 10px 4px;margin-bottom:10px;}
 .org .o-del{font-size:.85rem;padding:6px 12px;margin-bottom:8px;}
 input.invalid{border-color:var(--acid);box-shadow:0 0 0 1px var(--acid);}
@@ -138,15 +162,15 @@ legend{font-weight:600;font-size:.92rem;padding:0 6px;}
 .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent);}
 .hint{color:var(--muted);font-size:.82rem;margin-top:8px;}
 
-.out h2{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-size:1.3rem;margin:0 0 10px;}
+.out h2{font-family:"Barlow Condensed","Bahnschrift SemiCondensed","Arial Narrow",sans-serif;font-size:1.3rem;margin:0 0 10px;}
 .preview{background:#FFFFFF;color:#111;border:1px solid var(--line);border-radius:4px;padding:12px 14px;min-height:120px;
   font-family:"Times New Roman",Times,serif;font-size:15px;line-height:1.45;overflow-x:auto;}
 .preview .empty{color:#777;font-family:"Barlow",sans-serif;}
 #code{font-family:Consolas,"Courier New",monospace;font-size:.8rem;min-height:170px;margin-top:12px;}
 .warn{margin-top:10px;padding:8px 10px;border-left:4px solid var(--acid);background:var(--field);font-size:.88rem;}
 .warn[hidden]{display:none;}
-.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 20px);transform:translateX(-50%);
-  background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .2s;}
+.toast{max-width:min(560px,calc(100% - 32px));text-align:center;position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 20px);transform:translateX(-50%);
+  background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:18px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .2s;}
 .toast.show{opacity:1;}
 @media (max-width:820px){
   .grid{grid-template-columns:1fr;}
@@ -165,6 +189,7 @@ legend{font-weight:600;font-size:.92rem;padding:0 6px;}
     <div class="bar-name" id="bar_name">S.O.S</div>
     <div class="bar-sub"><span id="bar_sub">Defeito no coletivo</span> · Gerador de alertas</div>
   </div>
+  <button type="button" class="btn user-chip" id="user_chip">Entrar</button>
   <button type="button" class="btn primary bar-gen" id="bar_gen">Gerar e copiar</button>
 </div>
 <div class="scrim" id="scrim" hidden></div>
@@ -185,7 +210,7 @@ legend{font-weight:600;font-size:.92rem;padding:0 6px;}
     <label for="cfg_header">Cabeçalho dos alertas</label>
     <input id="cfg_header" value="EMPRESA – ÁREA 4 – CCO">
   </div>
-  <div class="hint" id="drawer_hint">Atalhos: Ctrl+Enter gera e copia · Alt+1 a Alt+6 trocam de seção · Esc fecha o menu.</div>
+  <div class="hint" id="drawer_hint">Atalhos: Ctrl+Enter gera e copia · Alt+1 a Alt+6 trocam de seção · Esc fecha o menu.<br>Versão local: funciona offline e nada é enviado para a internet.</div>
 </nav>
 
 <div class="wrap">
@@ -198,6 +223,7 @@ legend{font-weight:600;font-size:.92rem;padding:0 6px;}
           <div class="fld"><label for="sos_coletivo">Prefixo do coletivo</label><input id="sos_coletivo" inputmode="numeric" placeholder="Ex.: 45590"></div>
           <div class="fld"><label for="sos_linha">Linha <span class="opt">opcional</span></label><input id="sos_linha" placeholder="Ex.: 2720-10"></div>
         </div>
+        <div class="fld pn" id="sos_pn_box"><span class="lbl">Afeta o ponto notável? <span class="req">obrigatório</span></span><div class="pn-opts"><label class="check"><input type="radio" name="sos_pn" value="Sim"> Sim</label><label class="check"><input type="radio" name="sos_pn" value="Não"> Não</label></div></div>
         <div class="fld"><label for="sos_local">Local <span class="opt">opcional, quando aguarda no local</span></label><input id="sos_local" placeholder="Ex.: Praça Monsenhor Ciro Turino"></div>
         <div class="fld"><span class="lbl">Defeito <span class="opt">pode marcar mais de um</span></span>
           <details class="dd" id="sos_dd">
@@ -230,7 +256,7 @@ legend{font-weight:600;font-size:.92rem;padding:0 6px;}
           <input id="sos_situacao_outro" class="outro" hidden placeholder="Descreva a situação">
         </div>
         <label class="check"><input type="checkbox" id="sos_op"> Operacional encaminhado ao local</label>
-        <div class="fld" id="sos_op_box" hidden><label for="sos_op_nome">Nome do operacional <span class="opt">opcional</span></label><input id="sos_op_nome" placeholder="Ex.: Nome do operacional"></div>
+        <div class="fld" id="sos_op_box" hidden><label for="sos_op_nome">Nome do operacional <span class="opt">opcional</span></label><input id="sos_op_nome" placeholder="Ex.: Bruno"></div>
         <div class="fld"><label for="sos_desfecho">Desfecho</label>
           <select id="sos_desfecho" data-outro>
             <option value="">Em andamento (sem desfecho ainda)</option>
@@ -255,9 +281,19 @@ legend{font-weight:600;font-size:.92rem;padding:0 6px;}
             <option value="via">Acidente na via (entre terceiros)</option>
           </select>
         </div>
+        <details class="dd hist" id="ahist_box" data-for="via">
+          <summary><span>Histórico da sessão – acidentes na via (<span id="ahist_count">0</span>)</span></summary>
+          <div class="hist-body">
+            <div id="ahist_list"></div>
+            <div class="actions" style="justify-content:space-between;align-items:center">
+              <span class="hint" style="margin:0">Apagado automaticamente ao fechar o gerador.</span>
+              <button type="button" class="btn" id="ahist_clear" hidden>Limpar histórico</button>
+            </div>
+          </div>
+        </details>
         <div class="row">
           <div class="fld" data-for="colisao_sem colisao_com queda mal"><label for="ac_coletivo">Prefixo do coletivo</label><input id="ac_coletivo" inputmode="numeric" placeholder="Ex.: 45590"></div>
-          <div class="fld"><label for="ac_linha">Linha <span class="opt">opcional</span></label><input id="ac_linha" placeholder="Ex.: 2728-10"></div>
+          <div class="fld"><label for="ac_linha_add">Linhas afetadas <span class="opt">Enter adiciona</span></label><div class="tags" data-target="ac_linha"><div class="tag-list"></div><input class="tag-in" id="ac_linha_add" placeholder="Ex.: 2728-10"><button type="button" class="btn tag-btn">+ Linha</button></div><input id="ac_linha" hidden></div>
         </div>
         <div class="row">
           <div class="fld"><label for="ac_data">Data</label><input type="date" id="ac_data"></div>
@@ -265,6 +301,7 @@ legend{font-weight:600;font-size:.92rem;padding:0 6px;}
         </div>
         <div class="fld"><label for="ac_local">Local</label><input id="ac_local" placeholder="Ex.: Rua Embaixador Dias Carneiro, nº 80"></div>
         <div class="fld" data-for="via"><label for="ac_pref">Prefixo que acionou o alerta <span class="opt">opcional</span></label><input id="ac_pref" inputmode="numeric" placeholder="Ex.: 45337"></div>
+        <div class="fld pn" id="ac_pn_box"><span class="lbl">Afeta o ponto notável? <span class="req">obrigatório</span></span><div class="pn-opts"><label class="check"><input type="radio" name="ac_pn" value="Sim"> Sim</label><label class="check"><input type="radio" name="ac_pn" value="Não"> Não</label></div></div>
 
         <fieldset data-for="colisao_sem colisao_com queda mal">
           <legend>Condutor</legend>
@@ -318,7 +355,7 @@ legend{font-weight:600;font-size:.92rem;padding:0 6px;}
           <div class="hint" style="margin-bottom:10px">Quando o B.O ficar pronto, volte aqui, digite o número e gere só o complemento. Os dados do acidente continuam preenchidos (não aperte Limpar antes).</div>
         </fieldset>
         <label class="check"><input type="checkbox" id="ac_op"> Operacional encaminhado ao local</label>
-        <div class="fld" id="ac_op_box" hidden><label for="ac_op_nome">Nome do operacional <span class="opt">opcional</span></label><input id="ac_op_nome" placeholder="Ex.: Nome do operacional"></div>
+        <div class="fld" id="ac_op_box" hidden><label for="ac_op_nome">Nome do operacional <span class="opt">opcional</span></label><input id="ac_op_nome" placeholder="Ex.: Bruno"></div>
         <div class="fld" data-for="via"><label for="ac_status">Status <span class="opt">opcional</span></label>
           <input id="ac_status" value="Operacional a caminho para colher mais informações."></div>
         <div class="fld"><label for="ac_desfecho">Desfecho <span class="opt">opcional</span></label>
@@ -334,12 +371,23 @@ legend{font-weight:600;font-size:.92rem;padding:0 6px;}
 
       <!-- ============ INTERFERÊNCIA ============ -->
       <form id="f_interf" autocomplete="off" onsubmit="return false" hidden>
+        <details class="dd hist" id="hist_box">
+          <summary><span>Histórico da sessão (<span id="hist_count">0</span>)</span></summary>
+          <div class="hist-body">
+            <div id="hist_list"></div>
+            <div class="actions" style="justify-content:space-between;align-items:center">
+              <span class="hint" style="margin:0">Apagado automaticamente ao fechar o gerador.</span>
+              <button type="button" class="btn" id="hist_clear" hidden>Limpar histórico</button>
+            </div>
+          </div>
+        </details>
         <div class="row">
           <div class="fld"><label for="in_data">Data</label><input type="date" id="in_data"></div>
-          <div class="fld"><label for="in_linhas">Linhas afetadas</label><input id="in_linhas" placeholder="Ex.: 2720-10/31"></div>
+          <div class="fld"><label for="in_linhas_add">Linhas afetadas <span class="opt">Enter adiciona</span></label><div class="tags" data-target="in_linhas"><div class="tag-list"></div><input class="tag-in" id="in_linhas_add" placeholder="Ex.: 2720-10"><button type="button" class="btn tag-btn">+ Linha</button></div><input id="in_linhas" hidden></div>
         </div>
         <div class="fld"><label for="in_local">Local</label><input id="in_local" placeholder="Ex.: Rua Figueira da Polinésia, nº 1366"></div>
         <div class="fld"><label for="in_pref">Prefixo que acionou o alerta <span class="opt">opcional</span></label><input id="in_pref" inputmode="numeric" placeholder="Ex.: 45534"></div>
+        <div class="fld pn" id="in_pn_box"><span class="lbl">Afeta o ponto notável? <span class="req">obrigatório</span></span><div class="pn-opts"><label class="check"><input type="radio" name="in_pn" value="Sim"> Sim</label><label class="check"><input type="radio" name="in_pn" value="Não"> Não</label></div></div>
         <div class="row">
           <div class="fld"><label for="in_inicio">Início</label><input type="time" id="in_inicio"></div>
           <div class="fld"><label for="in_termino">Término</label><input type="time" id="in_termino" disabled></div>
@@ -372,8 +420,8 @@ legend{font-weight:600;font-size:.92rem;padding:0 6px;}
         <fieldset id="in_resp_box" hidden>
           <legend>Responsável pela obra</legend>
           <div class="row">
-            <div class="fld"><label for="in_resp_nome">Supervisor / responsável <span class="opt">opcional</span></label><input id="in_resp_nome" placeholder="Ex.: Nome do responsável"></div>
-            <div class="fld"><label for="in_resp_emp">Empresa <span class="opt">opcional</span></label><input id="in_resp_emp" placeholder="Ex.: Nome da empresa"></div>
+            <div class="fld"><label for="in_resp_nome">Supervisor / responsável <span class="opt">opcional</span></label><input id="in_resp_nome" placeholder="Ex.: Fabrício"></div>
+            <div class="fld"><label for="in_resp_emp">Empresa <span class="opt">opcional</span></label><input id="in_resp_emp" placeholder="Ex.: Trajeto"></div>
           </div>
         </fieldset>
 
@@ -391,9 +439,9 @@ legend{font-weight:600;font-size:.92rem;padding:0 6px;}
 
         <div class="fld"><label for="in_relato">Relato</label><textarea id="in_relato"></textarea></div>
         <label class="check"><input type="checkbox" id="in_op"> Operacional encaminhado à interferência</label>
-        <div class="fld" id="in_op_box" hidden><label for="in_op_nome">Nome do operacional <span class="opt">opcional</span></label><input id="in_op_nome" placeholder="Ex.: Nome do operacional"></div>
+        <div class="fld" id="in_op_box" hidden><label for="in_op_nome">Nome do operacional <span class="opt">opcional</span></label><input id="in_op_nome" placeholder="Ex.: Bruno"></div>
         <div class="fld"><label for="in_obs">Observação <span class="opt">opcional, ex.: agentes no local</span></label>
-          <input id="in_obs" placeholder="Ex.: Agentes da CET no local realizando o acompanhamento do QRU, VTR 0000."></div>
+          <input id="in_obs" placeholder="Ex.: Agentes Valin e Claudio no local realizando o acompanhamento do QRU, VTR 3091."></div>
         <div class="fld"><label for="in_atual">Atualização <span class="opt">opcional</span></label>
           <textarea id="in_atual" style="min-height:56px"></textarea>
           <div class="chips"><button type="button" class="chip" data-fill="in_atual" data-text="CET no local organizou a utilização temporária de uma faixa da pista sentido [SENTIDO] para dar vazão aos coletivos presos na interdição. VTR da CET: [Nº], agente [NOME].">CET liberou faixa</button></div>
@@ -468,6 +516,11 @@ legend{font-weight:600;font-size:.92rem;padding:0 6px;}
       <!-- ============ MENSAGENS ============ -->
       <form id="f_msgs" autocomplete="off" onsubmit="return false" hidden>
         <fieldset>
+          <legend>Bloco de notas pessoal</legend>
+          <textarea id="notas" style="min-height:150px" placeholder="Anotações do seu plantão…"></textarea>
+          <div class="hint" id="notas_hint" style="margin-bottom:10px"></div>
+        </fieldset>
+        <fieldset>
           <legend>Lembretes do turno</legend>
           <div class="row">
             <div class="fld"><label for="lb_inicio">Início do turno</label><input type="time" id="lb_inicio" value="22:00"></div>
@@ -509,6 +562,7 @@ legend{font-weight:600;font-size:.92rem;padding:0 6px;}
           <input type="file" id="enc_file" accept="image/*" hidden>
           <img id="enc_img" alt="Print da ocorrência" hidden>
           <div class="actions" id="enc_img_actions" hidden>
+            <button type="button" class="btn primary" id="enc_share">Compartilhar print + mensagem</button>
             <button type="button" class="btn" id="enc_img_copy">Copiar print</button>
             <button type="button" class="btn" id="enc_img_del">Remover print</button>
           </div>
@@ -536,6 +590,26 @@ legend{font-weight:600;font-size:.92rem;padding:0 6px;}
         <a class="btn" id="wa_link" target="_blank" rel="noopener" hidden>Abrir no WhatsApp</a>
       </div>
     </aside>
+  </div>
+</div>
+<div class="auth" id="auth" hidden>
+  <div class="auth-card" role="dialog" aria-modal="true" aria-labelledby="auth_t">
+    <h1 id="auth_t">Gerador de alertas</h1>
+    <div class="auth-tabs">
+      <button type="button" class="chip on" id="au_tab_in">Entrar</button>
+      <button type="button" class="chip" id="au_tab_new">Criar usuário</button>
+    </div>
+    <div class="fld"><label for="au_login">Usuário</label><input id="au_login" autocomplete="username" placeholder="Ex.: operador1"></div>
+    <div class="fld" id="au_nome_box" hidden><label for="au_nome">Seu nome <span class="opt">aparece no cabeçalho dos alertas</span></label><input id="au_nome" placeholder="Ex.: Ana"></div>
+    <div class="fld"><label for="au_senha">Senha</label><input type="password" id="au_senha" autocomplete="current-password"></div>
+    <div class="fld" id="au_senha2_box" hidden><label for="au_senha2">Repita a senha</label><input type="password" id="au_senha2" autocomplete="new-password"></div>
+    <div class="warn" id="au_msg" hidden></div>
+    <div class="actions">
+      <button type="button" class="btn primary" id="au_go">Entrar</button>
+      <button type="button" class="btn" id="au_guest">Usar sem login</button>
+    </div>
+    <div class="sep" style="margin-top:14px"></div>
+    <div class="auth-store"><span id="au_store"></span><button type="button" class="chip" id="au_dir" hidden>Escolher pasta de dados</button></div>
   </div>
 </div>
 <div class="lembrete" id="lembrete" role="alert" hidden>
@@ -566,8 +640,15 @@ legend{font-weight:600;font-size:.92rem;padding:0 6px;}
   let cat = 'sos';
 
   // ---------- preferências (cabeçalho e nome) ----------
-  function load(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
-  function save(k,val){ try{ localStorage.setItem(k,val); }catch(e){} }
+  let sess = null, saveTimer = null;
+  function load(k){
+    if(sess) return sess.data[k] !== undefined ? sess.data[k] : null;
+    try{ return localStorage.getItem(k); }catch(e){ return null; }
+  }
+  function save(k,val){
+    if(sess){ sess.data[k] = val; clearTimeout(saveTimer); saveTimer = setTimeout(() => { saveTimer = null; persist(); }, 700); return; }
+    try{ localStorage.setItem(k,val); }catch(e){}
+  }
   const savedHdr = load('cco_header'); if(savedHdr) $('cfg_header').value = savedHdr;
   const savedNome = load('cco_nome'); if(savedNome) $('ac_acomp_nome').value = savedNome;
   $('cfg_header').addEventListener('change', e => save('cco_header', e.target.value));
@@ -786,7 +867,7 @@ legend{font-weight:600;font-size:.92rem;padding:0 6px;}
     const lines = [header('COMPLEMENTO DE ALERTA – B.O', ''),
       L('REFERENTE A', cfg.title),
       t !== 'via' ? L('COLETIVO', esc(v('ac_coletivo'))) : '',
-      L('LINHA', font('BLUE', esc(v('ac_linha')))),
+      L(v('ac_linha').includes(',') ? 'LINHAS' : 'LINHA', font('BLUE', esc(v('ac_linha')))),
       L('DATA', font('BLUE', fd(v('ac_data')))),
       L('HORA', font('BLUE', esc(v('ac_hora')))),
       L('LOCAL', font('BLUE', esc(v('ac_local')))),
@@ -895,6 +976,7 @@ legend{font-weight:600;font-size:.92rem;padding:0 6px;}
     const lines = [header('COLETIVO EM S.O.S')];
     lines.push($('sos_retif').checked ? L('RETIFICANDO, ALERTA REFERENTE AO COLETIVO', colFmt) : L('COLETIVO', colFmt));
     lines.push(L('LINHA', font('BLUE', esc(v('sos_linha')))));
+    lines.push(L('AFETA O PONTO NOTÁVEL', pnVal('sos')));
     lines.push(L('LOCAL', font('BLUE', esc(v('sos_local')))));
     lines.push(L('DEFEITO', def));
     lines.push(L('SITUAÇÃO', esc(pick('sos_situacao'))));
@@ -912,7 +994,8 @@ legend{font-weight:600;font-size:.92rem;padding:0 6px;}
       const col = esc(v('ac_coletivo')); if(!col) miss.push('coletivo');
       lines.push(L('COLETIVO', col));
     }
-    lines.push(L('LINHA', font('BLUE', esc(v('ac_linha')))));
+    lines.push(L(v('ac_linha').includes(',') ? 'LINHAS AFETADAS' : 'LINHA', font('BLUE', esc(v('ac_linha')))));
+    lines.push(L('AFETA O PONTO NOTÁVEL', pnVal('ac')));
     lines.push(L('DATA', font('BLUE', fd(v('ac_data')))));
     lines.push(L('HORA', font('BLUE', esc(v('ac_hora')))));
     const local = esc(v('ac_local')); if(!local) miss.push('local');
@@ -965,6 +1048,7 @@ legend{font-weight:600;font-size:.92rem;padding:0 6px;}
     lines.push(L('LOCAL', font('BLUE', local)));
     lines.push(L('LINHAS AFETADAS', font('BLUE', linhas)));
     lines.push(prefLine('in'));
+    lines.push(L('AFETA O PONTO NOTÁVEL', pnVal('in')));
     lines.push(L('HORÁRIO DE INÍCIO', font('BLUE', esc(v('in_inicio')))));
     const term = $('in_semprev').checked ? 'Sem previsão no momento' : esc(v('in_termino'));
     lines.push(L('HORÁRIO DE TÉRMINO', font('BLUE', term)));
@@ -1096,6 +1180,31 @@ legend{font-weight:600;font-size:.92rem;padding:0 6px;}
   $('enc_drop').addEventListener('drop', e => { e.preventDefault(); setImg(e.dataTransfer.files[0]); });
   $('enc_file').addEventListener('change', e => setImg(e.target.files[0]));
   $('enc_img_del').addEventListener('click', clearImg);
+  async function pngBlob(){
+    if(encBlob.type === 'image/png') return encBlob;
+    return await new Promise(res => {
+      const c = document.createElement('canvas'), im = $('enc_img');
+      c.width = im.naturalWidth; c.height = im.naturalHeight;
+      c.getContext('2d').drawImage(im, 0, 0); c.toBlob(res, 'image/png');
+    });
+  }
+  $('enc_share').addEventListener('click', async () => {
+    if(!encBlob) return toast('Cole o print primeiro');
+    const text = genEnc().text;
+    const ext = (encBlob.type.split('/')[1] || 'png').replace('jpeg', 'jpg');
+    const file = new File([encBlob], 'ocorrencia.' + ext, { type: encBlob.type || 'image/png' });
+    try{
+      if(!(navigator.canShare && navigator.canShare({ files:[file], text }))) throw new Error('sem suporte');
+      await navigator.share({ files:[file], text });
+      toast('Compartilhado');
+      generate();
+    }catch(e){
+      if(e && e.name === 'AbortError') return;
+      await generate();
+      try{ await navigator.clipboard.write([new ClipboardItem({ 'image/png': await pngBlob() })]); }catch(_){}
+      toast('Não deu para enviar os dois juntos por aqui. O print foi copiado: cole no grupo e depois cole a mensagem na legenda (botão Copiar mensagem).', 7000);
+    }
+  });
   $('enc_img_copy').addEventListener('click', async () => {
     try{
       let blob = encBlob;
@@ -1234,6 +1343,8 @@ legend{font-weight:600;font-size:.92rem;padding:0 6px;}
 
   // ---------- prefixo, operacional e responsável pela obra ----------
   ['sos','ac','in'].forEach(p => $(p + '_op').addEventListener('change', e => $(p + '_op_box').hidden = !e.target.checked));
+  const pnVal = p => { const r = document.querySelector('input[name="' + p + '_pn"]:checked'); return r ? r.value : ''; };
+  document.addEventListener('change', e => { if(e.target.name && /_pn$/.test(e.target.name)) $(e.target.name + '_box').classList.remove('erro'); });
   const prefLine = p => L('PREFIXO QUE ACIONOU', esc(v(p + '_pref')));
   function opLine(p){
     if(!$(p + '_op').checked) return '';
@@ -1248,6 +1359,258 @@ legend{font-weight:600;font-size:.92rem;padding:0 6px;}
     return L('RESPONSÁVEL PELA OBRA', n ? n + (e ? ', empresa ' + e : '') : 'Empresa ' + e);
   }
 
+  // ---------- linhas (várias por campo) ----------
+  const tagWidgets = () => document.querySelectorAll('.tags');
+  function tagVals(t){ const x = $(t.dataset.target).value; return x ? x.split(', ').filter(Boolean) : []; }
+  function setTags(t, arr){ $(t.dataset.target).value = arr.join(', '); renderTags(t); }
+  function renderTags(t){
+    const list = t.querySelector('.tag-list'); list.innerHTML = '';
+    tagVals(t).forEach((val, i) => {
+      const c = document.createElement('span'); c.className = 'tag'; c.textContent = val;
+      const x = document.createElement('button'); x.type = 'button'; x.className = 'tag-x'; x.textContent = '×';
+      x.setAttribute('aria-label', 'Remover linha ' + val);
+      x.addEventListener('click', () => { const a = tagVals(t); a.splice(i, 1); setTags(t, a); });
+      c.appendChild(x); list.appendChild(c);
+    });
+  }
+  function commitTag(t){
+    const inp = t.querySelector('.tag-in');
+    const parts = inp.value.split(/[,;]+/).map(x => x.trim()).filter(Boolean);
+    if(!parts.length) return;
+    const a = tagVals(t); parts.forEach(p => { if(!a.includes(p)) a.push(p); });
+    inp.value = ''; setTags(t, a);
+  }
+  function refreshTags(){ tagWidgets().forEach(renderTags); }
+  function commitAllTags(){ tagWidgets().forEach(commitTag); }
+  tagWidgets().forEach(t => {
+    const inp = t.querySelector('.tag-in');
+    inp.addEventListener('keydown', e => {
+      if(e.key === 'Enter' && !(e.ctrlKey || e.metaKey)){ e.preventDefault(); commitTag(t); }
+      if(e.key === 'Backspace' && !inp.value){ const a = tagVals(t); if(a.length){ a.pop(); setTags(t, a); } }
+    });
+    inp.addEventListener('blur', () => commitTag(t));
+    t.querySelector('.tag-btn').addEventListener('click', () => { commitTag(t); inp.focus(); });
+  });
+
+  // ---------- histórico temporário (interferências e acidentes na via, só na memória) ----------
+  const HIST = {
+    interf: { form:'f_interf', box:'hist_box', list:'hist_list', count:'hist_count', clear:'hist_clear', focus:'in_linhas_add', items:[],
+      meta: () => { const m = $('in_motivo'); return { local:v('in_local'), linhas:v('in_linhas'), pref:v('in_pref'),
+        info: m.value === '__outro' ? v('in_motivo_outro') : (m.value ? m.selectedOptions[0].text : '') }; } },
+    acid: { form:'f_acid', box:'ahist_box', list:'ahist_list', count:'ahist_count', clear:'ahist_clear', focus:'ac_linha_add', items:[],
+      meta: () => ({ local:v('ac_local'), linhas:v('ac_linha'), pref:v('ac_pref'), info:'Acidente na via' }) }
+  };
+  function snapForm(key){
+    const s = {};
+    $(HIST[key].form).querySelectorAll('input, select, textarea').forEach(el => {
+      if(el.type === 'radio'){ if(el.checked) s['radio:' + el.name] = el.value; return; }
+      if(!el.id || el.type === 'file') return;
+      s[el.id] = el.type === 'checkbox' ? el.checked : el.value;
+    });
+    if(key === 'acid') s.__orgs = Array.from(document.querySelectorAll('#org_list .org')).map(r => {
+      const g = c => r.querySelector(c).value;
+      return { tipo:g('.o-tipo'), outro:g('.o-outro'), num:g('.o-num'), resp:g('.o-resp'), dest:g('.o-dest') };
+    });
+    return s;
+  }
+  function restoreForm(key, s){
+    const first = key === 'interf' ? 'in_motivo' : 'ac_tipo';
+    $(first).value = s[first] || ''; $(first).dispatchEvent(new Event('change'));
+    Object.keys(s).filter(k => k.startsWith('radio:')).forEach(k => {
+      const r = document.querySelector('input[name="' + k.slice(6) + '"][value="' + s[k] + '"]');
+      if(r){ r.checked = true; r.dispatchEvent(new Event('change')); }
+    });
+    Object.keys(s).forEach(k => {
+      if(k.startsWith('radio:') || k.startsWith('__') || k === first) return;
+      const el = $(k); if(!el) return;
+      if(el.type === 'checkbox'){ el.checked = s[k]; el.dispatchEvent(new Event('change')); }
+      else el.value = s[k];
+    });
+    if(key === 'interf') $('in_termino').disabled = $('in_semprev').checked;
+    if(key === 'acid'){
+      $('org_list').innerHTML = '';
+      (s.__orgs || []).forEach(o => {
+        addOrg(o.tipo); const r = $('org_list').lastElementChild;
+        r.querySelector('.o-outro').value = o.outro; r.querySelector('.o-outro').hidden = o.tipo !== '__outro';
+        r.querySelector('.o-num').value = o.num; r.querySelector('.o-resp').value = o.resp; r.querySelector('.o-dest').value = o.dest;
+      });
+    }
+    refreshTags();
+  }
+  function addHist(key, html){
+    const H = HIST[key];
+    if(H.items.length && H.items[0].html === html) return;
+    H.items.unshift(Object.assign({ t:Date.now(), html, snap:snapForm(key) }, H.meta()));
+    if(H.items.length > 30) H.items.pop();
+    renderHist(key);
+  }
+  function renderHist(key){
+    const H = HIST[key];
+    $(H.count).textContent = H.items.length;
+    const box = $(H.list); box.innerHTML = '';
+    $(H.clear).hidden = !H.items.length;
+    if(!H.items.length){ box.innerHTML = '<div class="hint" style="margin:0 0 8px">Nenhum alerta gerado nesta sessão.</div>'; return; }
+    H.items.forEach((h, i) => {
+      const d = document.createElement('div'); d.className = 'hitem';
+      const tt = document.createElement('b'); tt.textContent = hhmm(h.t) + ' · ' + (h.local || 'Sem local');
+      const sub = document.createElement('div'); sub.className = 'hsub';
+      sub.textContent = [h.linhas && 'Linhas ' + h.linhas, h.pref && 'Prefixo ' + h.pref, h.info].filter(Boolean).join(' · ');
+      const act = document.createElement('div'); act.className = 'actions';
+      act.innerHTML = '<button type="button" class="btn primary">Copiar alerta</button><button type="button" class="btn">Usar como base</button><button type="button" class="btn">Remover</button>';
+      const b = act.querySelectorAll('button');
+      b[0].addEventListener('click', () => generate({ html:h.html, miss:[] }));
+      b[1].addEventListener('click', () => { restoreForm(key, h.snap); $(H.box).open = false; toast('Dados carregados: ajuste linha ou prefixo e gere'); $(H.focus).focus(); });
+      b[2].addEventListener('click', () => { H.items.splice(i, 1); renderHist(key); });
+      d.append(tt, sub, act); box.appendChild(d);
+    });
+  }
+  Object.keys(HIST).forEach(k => {
+    $(HIST[k].clear).addEventListener('click', () => { HIST[k].items.length = 0; renderHist(k); toast('Histórico apagado'); });
+    renderHist(k);
+  });
+
+  // ---------- bloco de notas ----------
+  $('notas').value = load('cco_notas') || '';
+  $('notas').addEventListener('input', () => save('cco_notas', $('notas').value));
+
+  // ---------- usuários (perfis criptografados na pasta da rede) ----------
+  const store = { dir:null, fsa: !!window.showDirectoryPicker && window.self === window.top };
+  const enc8 = new TextEncoder(), dec8 = new TextDecoder();
+  function b64(buf){ const a = new Uint8Array(buf); let s = ''; for(let i = 0; i < a.length; i++) s += String.fromCharCode(a[i]); return btoa(s); }
+  const unb64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+  async function deriveKey(pass, salt){
+    const base = await crypto.subtle.importKey('raw', enc8.encode(pass), 'PBKDF2', false, ['deriveKey']);
+    return crypto.subtle.deriveKey({ name:'PBKDF2', salt, iterations:250000, hash:'SHA-256' }, base, { name:'AES-GCM', length:256 }, false, ['encrypt','decrypt']);
+  }
+  async function encryptObj(key, obj){
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const ct = await crypto.subtle.encrypt({ name:'AES-GCM', iv }, key, enc8.encode(JSON.stringify(obj)));
+    return { iv:b64(iv), ct:b64(ct) };
+  }
+  async function decryptObj(key, iv, ct){
+    const pt = await crypto.subtle.decrypt({ name:'AES-GCM', iv:unb64(iv) }, key, unb64(ct));
+    return JSON.parse(dec8.decode(pt));
+  }
+  function idb(){ return new Promise((res, rej) => { const r = indexedDB.open('cco_gerador', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); }
+  async function idbGet(k){ const db = await idb(); return new Promise(res => { const q = db.transaction('kv').objectStore('kv').get(k); q.onsuccess = () => res(q.result); q.onerror = () => res(null); }); }
+  async function idbSet(k, val){ const db = await idb(); return new Promise(res => { const q = db.transaction('kv', 'readwrite').objectStore('kv').put(val, k); q.onsuccess = () => res(true); q.onerror = () => res(false); }); }
+  async function ensurePerm(){
+    if(!store.dir) return true;
+    let p = await store.dir.queryPermission({ mode:'readwrite' });
+    if(p !== 'granted') p = await store.dir.requestPermission({ mode:'readwrite' });
+    return p === 'granted';
+  }
+  const fileName = login => login + '.cco.json';
+  async function readRec(login){
+    if(store.dir){
+      try{ const fh = await store.dir.getFileHandle(fileName(login)); return JSON.parse(await (await fh.getFile()).text()); }
+      catch(e){ if(e.name === 'NotFoundError') return null; throw e; }
+    }
+    const x = localStorage.getItem('cco_user_' + login); return x ? JSON.parse(x) : null;
+  }
+  async function writeRec(rec){
+    if(store.dir){
+      const fh = await store.dir.getFileHandle(fileName(rec.login), { create:true });
+      const w = await fh.createWritable(); await w.write(JSON.stringify(rec)); await w.close(); return;
+    }
+    localStorage.setItem('cco_user_' + rec.login, JSON.stringify(rec));
+  }
+  async function persist(){
+    if(!sess) return;
+    try{
+      const e = await encryptObj(sess.key, sess.data);
+      await writeRec({ v:1, login:sess.login, nome:sess.nome, salt:b64(sess.salt), iv:e.iv, ct:e.ct, upd:new Date().toISOString() });
+    }catch(err){ toast('Não consegui salvar seu perfil' + (store.dir ? ' na pasta da rede. Verifique a conexão.' : '.'), 4000); }
+  }
+  const normLogin = x => { const t = x.trim().toLowerCase(); return /^[a-z0-9._-]{3,30}$/.test(t) ? t : ''; };
+  function auMsg(t){ $('au_msg').textContent = t; $('au_msg').hidden = !t; }
+  let auMode = 'in';
+  function setAuMode(m){
+    auMode = m;
+    $('au_tab_in').classList.toggle('on', m === 'in'); $('au_tab_new').classList.toggle('on', m === 'new');
+    $('au_nome_box').hidden = $('au_senha2_box').hidden = m === 'in';
+    $('au_go').textContent = m === 'in' ? 'Entrar' : 'Criar e entrar';
+    $('au_senha').autocomplete = m === 'in' ? 'current-password' : 'new-password';
+    auMsg('');
+  }
+  $('au_tab_in').addEventListener('click', () => setAuMode('in'));
+  $('au_tab_new').addEventListener('click', () => setAuMode('new'));
+  function updStore(){
+    $('au_dir').hidden = !store.fsa;
+    if(store.dir){ $('au_store').textContent = 'Perfis salvos na pasta: ' + store.dir.name; $('au_dir').textContent = 'Trocar pasta'; }
+    else if(store.fsa){ $('au_store').textContent = 'Perfis salvos só neste computador. Escolha a pasta da rede para usar em todas as máquinas.'; $('au_dir').textContent = 'Escolher pasta de dados'; }
+    else $('au_store').textContent = 'Perfis salvos só neste navegador (a pasta da rede funciona na versão local, no Edge ou Chrome).';
+  }
+  $('au_dir').addEventListener('click', async () => {
+    try{
+      const h = await window.showDirectoryPicker({ id:'ccodados', mode:'readwrite' });
+      store.dir = h; await idbSet('dir', h); updStore(); auMsg('');
+    }catch(e){ if(e.name !== 'AbortError') auMsg('Não foi possível usar essa pasta: ' + e.message); }
+  });
+  function updUser(){
+    $('user_chip').textContent = sess ? sess.nome + ' · Sair' : 'Entrar';
+    $('user_chip').title = sess ? 'Sair do usuário ' + sess.login : 'Entrar com seu usuário';
+    $('notas_hint').textContent = sess ? 'Salvo automaticamente no seu usuário, criptografado.' : 'Salvo automaticamente neste computador. Entre com seu usuário para levar as notas para qualquer máquina.';
+  }
+  function applyPrefs(){
+    $('cfg_header').value = load('cco_header') || ('EMPRESA – ÁREA 4 – ' + (sess ? sess.nome.toUpperCase() + ' – ' : '') + 'CCO');
+    $('ac_acomp_nome').value = load('cco_nome') || (sess ? sess.nome : '');
+    let m = null; try{ m = JSON.parse(load('cco_msgs')); }catch(e){}
+    msgs = (Array.isArray(m) && m.length) ? m : MSG_DEF.map(x => ({ t:x.t, x:x.x }));
+    lbCfg = { inicio:'22:00', int:'2, 2, 3', msg:0 };
+    try{ Object.assign(lbCfg, JSON.parse(load('cco_lb')) || {}); }catch(e){}
+    $('lb_inicio').value = lbCfg.inicio; $('lb_int').value = lbCfg.int;
+    $('notas').value = load('cco_notas') || '';
+    renderMsgs(); renderSched(); updUser();
+  }
+  function showAuth(){
+    $('auth').hidden = false; setAuMode('in'); updStore();
+    $('au_senha').value = ''; $('au_senha2').value = '';
+    setTimeout(() => ($('au_login').value ? $('au_senha') : $('au_login')).focus(), 50);
+  }
+  async function doAuth(){
+    auMsg('');
+    const login = normLogin(v('au_login')), senha = $('au_senha').value;
+    if(!login) return auMsg('Usuário: de 3 a 30 caracteres, só letras, números, ponto, hífen ou _ (sem espaço).');
+    if(senha.length < 4) return auMsg('A senha precisa ter pelo menos 4 caracteres.');
+    if(!window.crypto || !crypto.subtle) return auMsg('Este navegador não permite login aqui. Use a versão local no Edge ou Chrome.');
+    $('au_go').disabled = true;
+    try{
+      if(!(await ensurePerm())) return auMsg('Sem permissão para acessar a pasta de dados. Clique em Entrar de novo e permita o acesso.');
+      const rec = await readRec(login);
+      if(auMode === 'new'){
+        if(rec) return auMsg('Esse usuário já existe. Escolha outro nome de usuário ou entre com ele.');
+        const nome = v('au_nome'); if(!nome) return auMsg('Informe seu nome.');
+        if(senha !== $('au_senha2').value) return auMsg('As senhas não conferem.');
+        const salt = crypto.getRandomValues(new Uint8Array(16));
+        sess = { login, nome, salt, key: await deriveKey(senha, salt), data:{} };
+        await persist();
+      } else {
+        if(!rec) return auMsg('Usuário não encontrado ' + (store.dir ? 'na pasta de dados.' : 'neste computador.') + ' Confira o nome ou crie o usuário.');
+        const salt = unb64(rec.salt), key = await deriveKey(senha, salt);
+        let data; try{ data = await decryptObj(key, rec.iv, rec.ct); }catch(e){ return auMsg('Senha incorreta.'); }
+        sess = { login, nome:rec.nome, salt, key, data };
+      }
+      try{ localStorage.setItem('cco_last_login', login); }catch(e){}
+      $('auth').hidden = true; $('au_senha').value = ''; $('au_senha2').value = '';
+      applyPrefs(); toast('Bem-vindo, ' + sess.nome + '!');
+    }catch(e){ auMsg('Erro ao acessar os dados: ' + (e.message || e)); }
+    finally{ $('au_go').disabled = false; }
+  }
+  $('au_go').addEventListener('click', doAuth);
+  $('au_guest').addEventListener('click', () => { $('auth').hidden = true; updUser(); });
+  $('user_chip').addEventListener('click', async () => {
+    if(!sess) return showAuth();
+    if(saveTimer){ clearTimeout(saveTimer); saveTimer = null; await persist(); }
+    location.reload();
+  });
+  window.addEventListener('beforeunload', () => { if(saveTimer) persist(); });
+  (async () => {
+    try{ if(store.fsa){ const h = await idbGet('dir'); if(h) store.dir = h; } }catch(e){}
+    try{ const last = localStorage.getItem('cco_last_login'); if(last) $('au_login').value = last; }catch(e){}
+    updUser(); showAuth();
+  })();
+
   // ---------- gerar, copiar, limpar ----------
   async function copyText(text){
     try{ await navigator.clipboard.writeText(text); return true; }
@@ -1259,15 +1622,29 @@ legend{font-weight:600;font-size:.92rem;padding:0 6px;}
     }
   }
   let toastTimer;
-  function toast(msg){
+  function toast(msg, ms){
     const t = $('toast'); t.textContent = msg; t.classList.add('show');
-    clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 1600);
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), ms || 1600);
   }
   async function generate(override){
     if(cat === 'msgs') return;
+    commitAllTags();
+    if(!(override && (override.html !== undefined || override.text !== undefined))){
+      const pk = { sos:'sos', acid:'ac', interf:'in' }[cat];
+      if(pk && !pnVal(pk)){
+        const b = $(pk + '_pn_box'); b.classList.add('erro');
+        if(b.scrollIntoView) b.scrollIntoView({ block:'center', behavior:'smooth' });
+        toast('Marque se afeta o ponto notável (obrigatório)', 3000);
+        return;
+      }
+    }
     const manual = !!(override && (override.html !== undefined || override.text !== undefined));
     const r = manual ? override : (cat === 'sos' ? genSOS() : cat === 'acid' ? genAcid() : cat === 'interf' ? genInterf() : cat === 'enc' ? genEnc() : genAtende());
     if(cat !== 'enc' && !manual) captureAlert();
+    if(!manual && r.html){
+      if(cat === 'interf') addHist('interf', r.html);
+      if(cat === 'acid' && v('ac_tipo') === 'via') addHist('acid', r.html);
+    }
     const isTxt = r.text !== undefined;
     const out = isTxt ? r.text : r.html;
     $('code').value = out;
@@ -1297,6 +1674,7 @@ legend{font-weight:600;font-size:.92rem;padding:0 6px;}
     toast(await copyText($('code').value) ? 'HTML copiado' : 'Selecione o HTML e copie com Ctrl+C');
   });
   document.addEventListener('keydown', e => {
+    if(!$('auth').hidden){ if(e.key === 'Enter'){ e.preventDefault(); doAuth(); } return; }
     if((e.ctrlKey || e.metaKey) && e.key === 'Enter'){ e.preventDefault(); generate(); }
     if(e.key === 'Escape') closeMenu();
     if(e.altKey && /^[1-6]$/.test(e.key)){ e.preventDefault(); document.querySelectorAll('.tab')[+e.key - 1].click(); }
@@ -1305,7 +1683,9 @@ legend{font-weight:600;font-size:.92rem;padding:0 6px;}
     const f = $('f_'+cat);
     const keepNome = $('ac_acomp_nome').value;
     f.reset();
+    refreshTags();
     f.querySelectorAll('.invalid').forEach(x => { x.classList.remove('invalid'); x.title = ''; });
+    f.querySelectorAll('.erro').forEach(x => x.classList.remove('erro'));
     f.querySelectorAll('[id$="_op_box"], #in_resp_box').forEach(x => x.hidden = true);
     $('ac_acomp_nome').value = keepNome;
     f.querySelectorAll('.outro').forEach(o => o.hidden = true);

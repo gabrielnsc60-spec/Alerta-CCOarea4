@@ -25,9 +25,13 @@ Um formulário guiado para cada tipo de ocorrência. O operador preenche, aperta
 | **Interferência na via** | Motivos com relato automático, desvios por sentido (TP/TS), responsável pela obra, horário de liberação |
 | **Atende** | E-mails das vans de atendimento especial, com assunto pronto |
 | **Mensagens** | Mensagens editáveis aos fiscais e lembretes programados no turno (bipe + notificação) |
+| **Usuários** | Login por operador, com perfil próprio (cabeçalho, nome, mensagens, lembretes e bloco de notas) que funciona em qualquer máquina do setor |
 | **Encaminhamentos** | Resumo para o WhatsApp reaproveitando o último alerta, com print colado por `Ctrl+V` |
 
 ## Telas
+
+![Tela de login](assets/telas/login.png)
+
 
 | Acidente | Interferência na via |
 |---|---|
@@ -44,7 +48,9 @@ Um formulário guiado para cada tipo de ocorrência. O operador preenche, aperta
 - **Saída em HTML** para colar no sistema com negrito, sublinhado e centralização preservados.
 - **Modelos com marcadores** (`[VIA]`, `[HORA]`) que se atualizam quando o local ou a hora mudam.
 - **Validações**: máscara e dígito verificador de CPF, placa em maiúsculas, aviso de campos faltando.
-- **Preferências salvas** no navegador (localStorage): cabeçalho, nome do operador, mensagens, lembretes.
+- **Usuários com perfil criptografado**: cada operador cria login e senha; o perfil é cifrado com AES-GCM 256 a partir da senha (PBKDF2, 250 mil iterações, Web Crypto API), então um operador não consegue ler o perfil de outro.
+- **Perfis na pasta compartilhada da rede**: com a File System Access API, o app grava um arquivo `NOME.cco.json` por operador na pasta `dados` da rede, e o mesmo perfil abre nas 6 máquinas do CCO. Sem a pasta, os perfis ficam no navegador (localStorage).
+- **Privacidade**: Content-Security-Policy bloqueia qualquer conexão externa, e os dados das ocorrências (CPF, placas, nomes) nunca são salvos.
 - **Feito para o turno**: atalhos (`Ctrl+Enter`, `Alt+1`–`Alt+6`, `Esc`), cores por tipo de ocorrência, modo escuro, layout responsivo e navegação por teclado.
 
 ## Estrutura
